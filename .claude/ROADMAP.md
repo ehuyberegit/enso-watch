@@ -19,7 +19,7 @@
 | The signal | We compute the Nino 3.4 anomaly OURSELVES from OISST daily SST, area averaged over 5N to 5S and 170W to 120W. This is the load bearing piece and it owns the netCDF dependency. |
 | Baseline | Climatology fixed at 1991 to 2020. Written into every record. Never changed silently. |
 | The control | The CPC monthly Nino 3.4 file (ersst5.nino.mth.91-20.ascii, same 1991 to 2020 base) is the cross check, not the source. We record the gap between our value and the official one. |
-| Official status | ONI phase and strength label, read from the CPC ONI table (HTML only, no clean file: a known fragility). |
+| Official status | ONI phase and strength label from the CPC ONI ascii file (oni.ascii.txt, clean plain text, seasonal SEAS/YR/TOTAL/ANOM). We read the ONI value (ANOM) and derive phase and strength from documented thresholds. The fixture capture found this clean source, so the earlier HTML fragility is retired. |
 | Freshness | Live daily pull. The latest days arrive as `_preliminary` files, replaced later by final ones. |
 | Automation | A GitHub Actions scheduled workflow pulls, recomputes, and commits the dated JSON into the repo. Data history lives in git. |
 | Precision | The anomaly is frozen to 3 decimals (0.001 C, well under the physical noise). This is what makes the deterministic test stable. |
@@ -64,14 +64,15 @@ Two products in V0, each record carrying its provenance block.
 
 ## 🔥 In progress
 
-_(V0 not started. Next action: build sequence step 1.)_
+_(V0. Build sequence steps 1 and 2 done. Next action: step 3, the Nino 3.4 computation against the OISST fixture, tested to the exact expected value at 3 decimals.)_
 
 ## ✅ Done
 
 - Scaffold laid (chef, pinned crews, roadmap, signatures, design).
-- Sources verified live: OISST daily netCDF path and file naming, CPC Nino 3.4 control file, ONI table, IRI plume.
-- enso-watch made its own git repo (estate invariant: one repo per project).
+- Sources verified live: OISST daily netCDF path and file naming, CPC Nino 3.4 control file, official ONI ascii, IRI plume.
+- enso-watch made its own git repo (estate invariant: one repo per project). Initial commit sealed.
 - Run contract frozen (this document).
+- V0 fixtures captured and frozen (build step 2): OISST daily netCDF (2026-07-01, full global grid), CPC Nino 3.4 monthly control, official ONI seasonal ascii, each recorded in fixtures/MANIFEST.json with source url, retrieval timestamp, byte size, and sha256.
 
 ## 🧊 Later
 

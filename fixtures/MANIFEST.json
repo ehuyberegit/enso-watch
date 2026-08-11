@@ -1,0 +1,29 @@
+{
+  "fixtures": [
+    {
+      "name": "oisst_daily",
+      "source_url": "https://www.ncei.noaa.gov/data/sea-surface-temperature-optimum-interpolation/v2.1/access/avhrr/202607/oisst-avhrr-v02r01.20260701.nc",
+      "local_path": "fixtures/oisst/oisst-avhrr-v02r01.20260701.nc",
+      "retrieved_at_utc": "2026-08-11T17:27:50Z",
+      "content_bytes": 1543522,
+      "sha256": "51219cd832b68635ccb455dead284c79ddd05d006b0ca72c6894c3af1564ea9d"
+    },
+    {
+      "name": "cpc_nino34_control",
+      "source_url": "https://www.cpc.ncep.noaa.gov/data/indices/ersst5.nino.mth.91-20.ascii",
+      "local_path": "fixtures/cpc/ersst5.nino.mth.91-20.ascii",
+      "retrieved_at_utc": "2026-08-11T17:27:50Z",
+      "content_bytes": 67087,
+      "sha256": "bedcd0683c07f7ccb2ae358a90cb39d57413dcc8881027e0c30a1811f6d58012"
+    },
+    {
+      "name": "cpc_oni_status",
+      "source_url": "https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt",
+      "local_path": "fixtures/cpc/oni.ascii.txt",
+      "retrieved_at_utc": "2026-08-11T17:27:50Z",
+      "content_bytes": 22975,
+      "sha256": "d1827d2687ff7262756af3b1d88feb2af59478096956dc741000d94dc54f937f"
+    }
+  ],
+  "captured_note": "Frozen real source responses for the offline deterministic test gate. Do not edit."
+}
