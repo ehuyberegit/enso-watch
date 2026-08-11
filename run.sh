@@ -11,7 +11,9 @@ fi
 export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
 cmd="${1:-test}"
 case "$cmd" in
-  test) exec "$PY" tools/run_tests.py ;;
-  emit) exec "$PY" -m enso_watch.cli ;;
-  *) echo "usage: ./run.sh [test|emit]" >&2; exit 2 ;;
+  test)  exec "$PY" tools/run_tests.py ;;
+  emit)  exec "$PY" -m enso_watch.cli ;;
+  pull)  exec "$PY" -m enso_watch.pull ;;
+  smoke) exec "$PY" -m enso_watch.smoke ;;
+  *) echo "usage: ./run.sh [test|emit|pull|smoke]" >&2; exit 2 ;;
 esac

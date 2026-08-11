@@ -42,30 +42,43 @@ def _latest_control(control_path):
     return period, float(last[9])
 
 
-def build_output(oisst_path, climatology_path, oni_path, control_path, fixtures_dir):
-    manifest = _load_manifest(fixtures_dir)
+def offline_provenance(fixtures_dir):
+    """Build the two provenance blocks from the frozen fixture manifest.
 
-    daily = nino34_anomaly(oisst_path, climatology_path)
+    This is the offline path (the emit command and the tests). The live pull
+    builds its own provenance blocks from the real download metadata.
+    """
+    manifest = _load_manifest(fixtures_dir)
     oisst_fx = manifest["oisst_daily"]
-    daily["provenance"] = provenance_block(
+    oni_fx = manifest["cpc_oni_status"]
+    oisst_provenance = provenance_block(
         source=SOURCE_META["oisst_daily"]["source"],
         dataset_version=SOURCE_META["oisst_daily"]["dataset_version"],
         retrieval_url=oisst_fx["source_url"],
         pull_timestamp=oisst_fx["retrieved_at_utc"],
         status=_oisst_file_status(oisst_fx["local_path"]),
     )
-
-    status = oni_status(oni_path)
-    control_period, control_anom = _latest_control(control_path)
-    status["our_nino34_vs_official"] = round(daily["nino34_anomaly_c"] - control_anom, 3)
-    status["control_period"] = control_period
-    oni_fx = manifest["cpc_oni_status"]
-    status["provenance"] = provenance_block(
+    oni_provenance = provenance_block(
         source=SOURCE_META["cpc_oni_status"]["source"],
         dataset_version=SOURCE_META["cpc_oni_status"]["dataset_version"],
         retrieval_url=oni_fx["source_url"],
         pull_timestamp=oni_fx["retrieved_at_utc"],
         status=SOURCE_META["cpc_oni_status"]["status"],
     )
+    return oisst_provenance, oni_provenance
+
+
+def build_output(oisst_path, climatology_path, oni_path, control_path,
+                 oisst_provenance, oni_provenance):
+    """Assemble the V0 product. The transform is identical offline or live; only
+    the provenance blocks differ by path, and they are passed in already built."""
+    daily = nino34_anomaly(oisst_path, climatology_path)
+    daily["provenance"] = oisst_provenance
+
+    status = oni_status(oni_path)
+    control_period, control_anom = _latest_control(control_path)
+    status["our_nino34_vs_official"] = round(daily["nino34_anomaly_c"] - control_anom, 3)
+    status["control_period"] = control_period
+    status["provenance"] = oni_provenance
 
     return {"daily_series": [daily], "status": status}

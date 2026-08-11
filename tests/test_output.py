@@ -6,7 +6,7 @@ carry a complete, non empty provenance block. A single hole is a red gate.
 import os
 import unittest
 
-from enso_watch.output import build_output
+from enso_watch.output import build_output, offline_provenance
 from enso_watch.provenance import REQUIRED_FIELDS, is_complete
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -29,7 +29,8 @@ DAILY_FIELDS = ("date", "nino34_anomaly_c", "region_mean_sst_c", "climatology_me
 
 class OutputContractTest(unittest.TestCase):
     def setUp(self):
-        self.out = build_output(OISST, CLIM, ONI, CONTROL, FIXTURES)
+        oisst_provenance, oni_provenance = offline_provenance(FIXTURES)
+        self.out = build_output(OISST, CLIM, ONI, CONTROL, oisst_provenance, oni_provenance)
 
     def test_every_record_has_complete_provenance(self):
         records = list(self.out["daily_series"]) + [self.out["status"]]

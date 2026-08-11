@@ -65,7 +65,7 @@ Two products in V0, each record carrying its provenance block.
 
 ## 🔥 In progress
 
-_(V0. Build sequence steps 1 to 4 done. Next action: step 5, wire the live pull behind the same transform, plus the live smoke check.)_
+_(V0. Build sequence steps 1 to 5 done. Next action: step 6, the GitHub Actions daily workflow that pulls, recomputes, and commits the dated JSON.)_
 
 ## ✅ Done
 
@@ -76,6 +76,7 @@ _(V0. Build sequence steps 1 to 4 done. Next action: step 5, wire the live pull 
 - V0 fixtures captured and frozen (build step 2): OISST daily netCDF (2026-07-01, full global grid), CPC Nino 3.4 monthly control, official ONI seasonal ascii, plus the 1991 to 2020 daily climatology subset to the Nino 3.4 box (via OPeNDAP), each recorded in fixtures/MANIFEST.json with source url, retrieval timestamp, byte size, and sha256.
 - Nino 3.4 computation built and gated (build step 3): area averaged box anomaly from OISST against the 1991 to 2020 box climatology, tested to the exact golden value at 3 decimals, offline, with a proven offline guard. Our raw region SST (29.215 C) matches the CPC control within 0.05 C. First hard gate green (./run.sh test, 9 tests). Passed adversarial review after fixing three robustness gaps (leap day policy, masked cell coverage, honest offline guard).
 - JSON output contract built and gated (build step 4): the daily series and the status record, each carrying a complete provenance block, plus the ENSO phase and strength derived from the ONI thresholds and the gap to the CPC control (with its period). Structural gate (criterion 4) refuses any provenance hole, including a null field. `./run.sh emit` prints the product. 15 tests green. Passed adversarial review after fixing the null provenance hole and adding threshold and lag coverage.
+- Live pull and smoke check built (build step 5): `./run.sh pull` downloads the real sources (via curl) and runs the same transform to write a dated JSON with honest live provenance; `./run.sh smoke` (criterion 2) reaches the real sources and confirms their shape, reporting without ever gating. Proven live against NOAA (resolved 2026-08-10 preliminary, all sources reachable and shape unchanged). The offline gate stays offline (network never a test dependency). 29 tests green. Passed adversarial review after switching network I/O from stdlib urllib to curl and fixing an HTTP status classification bug (a transient block must raise, only a real 404 means absent).
 
 ## 🧊 Later
 
