@@ -1,0 +1,7 @@
+{
+  "enabledPlugins": {
+    "engine@the-workspace": true,
+    "design@the-workspace": true,
+    "memory@the-workspace": true
+  }
+}

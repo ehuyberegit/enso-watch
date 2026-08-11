@@ -1,0 +1,82 @@
+# ROADMAP: enso-watch
+
+> Operational source of truth. At the top: the current work's run contract.
+> Rule: "Done" = integrated, green (machine gate), reviewed.
+
+## 🚦 Run contract, current work (V0, the observation oracle)
+
+> The spirit (Astrolab the company, not the take home): pragmatism over pilot theatre,
+> a working system that ships real data, honesty about scope. So V0 is not a demo: it is
+> a live daily pipeline whose truth is provable offline, whose every number carries its
+> source, and whose limits are stated out loud.
+
+### 1. Frozen decisions
+
+| Axis | Decision |
+| --- | --- |
+| Scope split | V0 = observation oracle only. V1 = forecast oracle. Impact is a separate later track, not V0 or V1 (the word "impact" is too broad to scope now). |
+| V0 output | A pipeline plus a clean, versioned JSON dataset. No UI. |
+| The signal | We compute the Nino 3.4 anomaly OURSELVES from OISST daily SST, area averaged over 5N to 5S and 170W to 120W. This is the load bearing piece and it owns the netCDF dependency. |
+| Baseline | Climatology fixed at 1991 to 2020. Written into every record. Never changed silently. |
+| The control | The CPC monthly Nino 3.4 file (ersst5.nino.mth.91-20.ascii, same 1991 to 2020 base) is the cross check, not the source. We record the gap between our value and the official one. |
+| Official status | ONI phase and strength label, read from the CPC ONI table (HTML only, no clean file: a known fragility). |
+| Freshness | Live daily pull. The latest days arrive as `_preliminary` files, replaced later by final ones. |
+| Automation | A GitHub Actions scheduled workflow pulls, recomputes, and commits the dated JSON into the repo. Data history lives in git. |
+| Precision | The anomaly is frozen to 3 decimals (0.001 C, well under the physical noise). This is what makes the deterministic test stable. |
+| Provenance | Every record carries: source name, dataset version, retrieval URL, pull timestamp, and preliminary/final status. No number without its block. |
+| Stack | Python, minimal pinned dependency set (netCDF and geospatial reading). Adding a dependency is a decision, not a convenience. |
+| Test discipline | A frozen fixture (a captured real source response) feeds the offline deterministic gate. The live pull feeds production. The two coexist: the fixture is the proof, the live data is the product. |
+
+### 2. Finish criteria (machine verifiable, the GO threshold)
+
+Nothing ships until these are true. Four hard gates, one live report, one mixed.
+
+| # | Criterion | What the machine checks | Verdict |
+| --- | --- | --- | --- |
+| 1 | Deterministic transform | Feed the frozen fixture to the pipeline, compare the produced JSON to the expected JSON to 3 decimals, offline. | Hard gate: identical = green, any diff = red. |
+| 2 | Live smoke check | Reach the real OISST and CPC sources, confirm they respond and their shape (grid, columns) is unchanged. | Reports only. Never blocks the build (network is not a test dependency). |
+| 3 | Workflow end to end | The scheduled workflow runs, recomputes, and commits a dated JSON on a clean run. | Hard gate: the job exits 0. |
+| 4 | Provenance complete | Every output record has a non empty provenance block (source, version, url, timestamp, preliminary/final). | Hard gate (structural): one hole = red. |
+| 5 | Docs do not lie | No command quoted in the README is false; no shipped document contradicts a runnable command; Trinity (no dashes) passes. | Mixed: the deterministic half is a probe, the rest is one review pass. |
+
+**GO threshold**: the hard gates (1, 3, 4) are green, the live smoke (2) reports without a blocking error, and the docs (5) pass the probe plus one read. A single command carries the offline hard gates (1 and 4); the workflow carries 3.
+
+### 3. The machine gate
+
+A single command, `run test` (concretely `./run.sh test`), runs the deterministic suite offline and exits 0 (green) or non zero (red). It never touches the network. The live smoke check is a separate command that reports, it is not part of the gate.
+
+### 4. The output contract (the JSON)
+
+Two products in V0, each record carrying its provenance block.
+
+- **Daily series** (the trajectory): `date`, `nino34_anomaly_c` (computed by us, 3 decimals), `region_mean_sst_c`, `baseline` ("1991-2020"), `provenance`.
+- **Status record** (the official snapshot): `oni_latest`, `phase` (el_nino / neutral / la_nina), `strength` (weak / moderate / strong / very_strong), `our_nino34_vs_official` (the control, made visible), `provenance`.
+
+### 5. Build sequence (V0)
+
+1. Fill the chef (CLAUDE.md): product, glossary, stack, the machine gate, domain rules. Confirm the repo (enso-watch is now its own git repo, Atlas ignores the folder).
+2. Capture one real OISST response and one CPC response as frozen fixtures.
+3. Write the Nino 3.4 computation (area average against the 1991 to 2020 baseline) against the fixture, tested to the exact expected value at 3 decimals.
+4. Write the JSON output contract and its provenance block, with a structural test.
+5. Wire the live pull behind the same transform, plus the live smoke check.
+6. Add the GitHub Actions daily workflow (pull, recompute, commit the dated JSON).
+7. README and decision log, in the Astrolab spirit (what it does, what it costs, what is still wrong, honest limits). Ship V0.
+
+## 🔥 In progress
+
+_(V0 not started. Next action: build sequence step 1.)_
+
+## ✅ Done
+
+- Scaffold laid (chef, pinned crews, roadmap, signatures, design).
+- Sources verified live: OISST daily netCDF path and file naming, CPC Nino 3.4 control file, ONI table, IRI plume.
+- enso-watch made its own git repo (estate invariant: one repo per project).
+- Run contract frozen (this document).
+
+## 🧊 Later
+
+**V1, the forecast oracle.** Ingest the IRI/CPC ENSO plume (probabilistic Nino 3.4, 26 models, 9 months ahead). Uncertainty is first class: the output carries the full spread (min, median, max) and the per phase probabilities, never a single naked number. Known blocker to solve first: the IRI plume has no clean downloadable file (visualization only), so V1 must find the machine readable door (for example the CPC probability table) before building.
+
+**Impact, a separate track.** Deferred by decision. "Impact" is scoped on its own, after observation and forecast are alive, never bolted onto V0 or V1.
+
+**Harness feedback.** Once the ingestion and provenance shapes prove out here, extract a reusable data crew into the-workspace (single sourced tooling, add on proof, not before).

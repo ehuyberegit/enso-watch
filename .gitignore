@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Env and secrets
+.env
+
+# OS
+.DS_Store
+
+# Local agent worktrees
+.claude/worktrees/
