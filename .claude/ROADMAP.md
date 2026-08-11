@@ -51,7 +51,7 @@ A single command, `run test` (concretely `./run.sh test`), runs the deterministi
 Two products in V0, each record carrying its provenance block.
 
 - **Daily series** (the trajectory): `date`, `nino34_anomaly_c` (computed by us, 3 decimals), `region_mean_sst_c`, `baseline` ("1991-2020"), `provenance`.
-- **Status record** (the official snapshot): `oni_latest`, `phase` (el_nino / neutral / la_nina), `strength` (weak / moderate / strong / very_strong), `our_nino34_vs_official` (the control, made visible), `provenance`.
+- **Status record** (the official snapshot): `oni_latest`, `oni_season`, `phase` (el_nino / neutral / la_nina), `strength` (none / weak / moderate / strong / very_strong), `our_nino34_vs_official` (the gap to the CPC control) with `control_period` (the month that control came from), `provenance`.
 
 ### 5. Build sequence (V0)
 
@@ -65,7 +65,7 @@ Two products in V0, each record carrying its provenance block.
 
 ## 🔥 In progress
 
-_(V0. Build sequence steps 1, 2, 3 done. Next action: step 4, the JSON output contract and its provenance block, with a structural test.)_
+_(V0. Build sequence steps 1 to 4 done. Next action: step 5, wire the live pull behind the same transform, plus the live smoke check.)_
 
 ## ✅ Done
 
@@ -75,6 +75,7 @@ _(V0. Build sequence steps 1, 2, 3 done. Next action: step 4, the JSON output co
 - Run contract frozen (this document).
 - V0 fixtures captured and frozen (build step 2): OISST daily netCDF (2026-07-01, full global grid), CPC Nino 3.4 monthly control, official ONI seasonal ascii, plus the 1991 to 2020 daily climatology subset to the Nino 3.4 box (via OPeNDAP), each recorded in fixtures/MANIFEST.json with source url, retrieval timestamp, byte size, and sha256.
 - Nino 3.4 computation built and gated (build step 3): area averaged box anomaly from OISST against the 1991 to 2020 box climatology, tested to the exact golden value at 3 decimals, offline, with a proven offline guard. Our raw region SST (29.215 C) matches the CPC control within 0.05 C. First hard gate green (./run.sh test, 9 tests). Passed adversarial review after fixing three robustness gaps (leap day policy, masked cell coverage, honest offline guard).
+- JSON output contract built and gated (build step 4): the daily series and the status record, each carrying a complete provenance block, plus the ENSO phase and strength derived from the ONI thresholds and the gap to the CPC control (with its period). Structural gate (criterion 4) refuses any provenance hole, including a null field. `./run.sh emit` prints the product. 15 tests green. Passed adversarial review after fixing the null provenance hole and adding threshold and lag coverage.
 
 ## 🧊 Later
 

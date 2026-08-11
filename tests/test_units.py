@@ -7,6 +7,7 @@ import unittest
 import numpy as np
 
 from enso_watch.nino34 import _area_average, _climatology_index
+from enso_watch.status import _phase, _strength
 
 
 class AreaAverageTest(unittest.TestCase):
@@ -39,6 +40,26 @@ class ClimatologyIndexTest(unittest.TestCase):
     def test_missing_date_raises(self):
         with self.assertRaises(ValueError):
             _climatology_index(self.cmonth, self.cday, 6, 15)
+
+
+class PhaseStrengthTest(unittest.TestCase):
+    def test_phase_boundaries(self):
+        self.assertEqual(_phase(0.5), "el_nino")
+        self.assertEqual(_phase(0.49), "neutral")
+        self.assertEqual(_phase(0.0), "neutral")
+        self.assertEqual(_phase(-0.49), "neutral")
+        self.assertEqual(_phase(-0.5), "la_nina")
+
+    def test_strength_boundaries(self):
+        self.assertEqual(_strength(0.49), "none")
+        self.assertEqual(_strength(0.5), "weak")
+        self.assertEqual(_strength(0.99), "weak")
+        self.assertEqual(_strength(1.0), "moderate")
+        self.assertEqual(_strength(1.49), "moderate")
+        self.assertEqual(_strength(1.5), "strong")
+        self.assertEqual(_strength(1.99), "strong")
+        self.assertEqual(_strength(2.0), "very_strong")
+        self.assertEqual(_strength(-1.6), "strong")  # magnitude, not sign
 
 
 if __name__ == "__main__":

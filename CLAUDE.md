@@ -25,7 +25,7 @@ Python, with a minimal pinned dependency set (numpy and netCDF4, in requirements
 
 Layout: the pipeline code lives under `src/enso_watch/`, the tests under `tests/`, one time capture tools under `tools/`, the frozen fixtures under `fixtures/` (with a provenance MANIFEST.json).
 
-THE MACHINE GATE: `./run.sh test` runs the deterministic suite offline (the frozen fixture in, the expected value out, compared to 3 decimals) and exits 0 (green) or non zero (red). It runs behind a proven socket guard and never touches the network. It needs the project venv: create it once with `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt`. The live smoke check (build step 5, not built yet) will be a separate command that reports on source reachability and shape, it never gates the build.
+THE MACHINE GATE: `./run.sh test` runs the deterministic suite offline (the frozen fixture in, the expected value out, compared to 3 decimals) and exits 0 (green) or non zero (red). It runs behind a proven socket guard and never touches the network. It needs the project venv: create it once with `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt`. `./run.sh emit` prints the V0 JSON product built from the frozen fixtures. The live smoke check (build step 5, not built yet) will be a separate command that reports on source reachability and shape, it never gates the build.
 
 ## Domain & security rules specific to this project
 - **False by default**: no number ships without a complete, non empty provenance block.
