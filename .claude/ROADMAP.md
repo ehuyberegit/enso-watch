@@ -23,6 +23,7 @@
 | Freshness | Live daily pull. The latest days arrive as `_preliminary` files, replaced later by final ones. |
 | Automation | A GitHub Actions scheduled workflow pulls, recomputes, and commits the dated JSON into the repo. Data history lives in git. |
 | Precision | The anomaly is frozen to 3 decimals (0.001 C, well under the physical noise). This is what makes the deterministic test stable. |
+| Leap day | The 1991 to 2020 daily climatology has 365 entries and no February 29. A February 29 observation uses the February 28 climatology. Documented and fixed, never changed silently. |
 | Provenance | Every record carries: source name, dataset version, retrieval URL, pull timestamp, and preliminary/final status. No number without its block. |
 | Stack | Python, minimal pinned dependency set (netCDF and geospatial reading). Adding a dependency is a decision, not a convenience. |
 | Test discipline | A frozen fixture (a captured real source response) feeds the offline deterministic gate. The live pull feeds production. The two coexist: the fixture is the proof, the live data is the product. |
@@ -64,7 +65,7 @@ Two products in V0, each record carrying its provenance block.
 
 ## 🔥 In progress
 
-_(V0. Build sequence steps 1 and 2 done. Next action: step 3, the Nino 3.4 computation against the OISST fixture, tested to the exact expected value at 3 decimals.)_
+_(V0. Build sequence steps 1, 2, 3 done. Next action: step 4, the JSON output contract and its provenance block, with a structural test.)_
 
 ## ✅ Done
 
@@ -72,7 +73,8 @@ _(V0. Build sequence steps 1 and 2 done. Next action: step 3, the Nino 3.4 compu
 - Sources verified live: OISST daily netCDF path and file naming, CPC Nino 3.4 control file, official ONI ascii, IRI plume.
 - enso-watch made its own git repo (estate invariant: one repo per project). Initial commit sealed.
 - Run contract frozen (this document).
-- V0 fixtures captured and frozen (build step 2): OISST daily netCDF (2026-07-01, full global grid), CPC Nino 3.4 monthly control, official ONI seasonal ascii, each recorded in fixtures/MANIFEST.json with source url, retrieval timestamp, byte size, and sha256.
+- V0 fixtures captured and frozen (build step 2): OISST daily netCDF (2026-07-01, full global grid), CPC Nino 3.4 monthly control, official ONI seasonal ascii, plus the 1991 to 2020 daily climatology subset to the Nino 3.4 box (via OPeNDAP), each recorded in fixtures/MANIFEST.json with source url, retrieval timestamp, byte size, and sha256.
+- Nino 3.4 computation built and gated (build step 3): area averaged box anomaly from OISST against the 1991 to 2020 box climatology, tested to the exact golden value at 3 decimals, offline, with a proven offline guard. Our raw region SST (29.215 C) matches the CPC control within 0.05 C. First hard gate green (./run.sh test, 9 tests). Passed adversarial review after fixing three robustness gaps (leap day policy, masked cell coverage, honest offline guard).
 
 ## 🧊 Later
 

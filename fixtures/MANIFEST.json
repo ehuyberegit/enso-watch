@@ -23,6 +23,15 @@
       "retrieved_at_utc": "2026-08-11T17:27:50Z",
       "content_bytes": 22975,
       "sha256": "d1827d2687ff7262756af3b1d88feb2af59478096956dc741000d94dc54f937f"
+    },
+    {
+      "name": "oisst_nino34_climatology_1991_2020",
+      "source_url": "https://psl.noaa.gov/thredds/dodsC/Datasets/noaa.oisst.v2.highres/sst.day.mean.ltm.1991-2020.nc",
+      "local_path": "fixtures/oisst/nino34_climatology_1991-2020.nc",
+      "retrieved_at_utc": "2026-08-11T17:46:54Z",
+      "content_bytes": 6335987,
+      "sha256": "258685866e040b00ad9b08f05446950ad668fc2bd3ae695157aa893c06d96ef4",
+      "note": "Box subset (Nino 3.4) of the official PSL 1991-2020 daily climatology, built via OPeNDAP by tools/capture_climatology.py."
     }
   ],
   "captured_note": "Frozen real source responses for the offline deterministic test gate. Do not edit."

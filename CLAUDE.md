@@ -21,9 +21,11 @@ enso-watch is a truth first pipeline that tracks the live ENSO signal (El Nino, 
 - **Fixture**: a captured real source response, frozen, that feeds the offline deterministic test.
 
 ## Stack & machine gate
-Python, with a minimal pinned dependency set (netCDF and geospatial reading). Adding a dependency is a decision, not a convenience. No UI in V0. Automation is a GitHub Actions scheduled daily workflow that pulls, recomputes, and commits the dated JSON into the repo.
+Python, with a minimal pinned dependency set (numpy and netCDF4, in requirements.txt). Adding a dependency is a decision, not a convenience. No UI in V0. Automation is a GitHub Actions scheduled daily workflow that pulls, recomputes, and commits the dated JSON into the repo.
 
-THE MACHINE GATE: `./run.sh test` runs the deterministic suite offline (the frozen fixture in, the expected JSON out, compared to 3 decimals) and exits 0 (green) or non zero (red). It never touches the network. The live smoke check is a separate command that reports on source reachability and shape, it never gates the build.
+Layout: the pipeline code lives under `src/enso_watch/`, the tests under `tests/`, one time capture tools under `tools/`, the frozen fixtures under `fixtures/` (with a provenance MANIFEST.json).
+
+THE MACHINE GATE: `./run.sh test` runs the deterministic suite offline (the frozen fixture in, the expected value out, compared to 3 decimals) and exits 0 (green) or non zero (red). It runs behind a proven socket guard and never touches the network. It needs the project venv: create it once with `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt`. The live smoke check (build step 5, not built yet) will be a separate command that reports on source reachability and shape, it never gates the build.
 
 ## Domain & security rules specific to this project
 - **False by default**: no number ships without a complete, non empty provenance block.
