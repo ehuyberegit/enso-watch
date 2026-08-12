@@ -1,7 +1,7 @@
 {
   "enabledPlugins": {
-    "engine@the-workspace": true,
-    "design@the-workspace": true,
-    "memory@the-workspace": true
+    "engine@halovera-core": true,
+    "design@halovera-core": true,
+    "memory@halovera-core": true
   }
 }
