@@ -1,0 +1,14 @@
+{
+  "product": "Warm water volume monthly anomaly (NOAA PMEL, ingested by enso-watch)",
+  "source_name": "NOAA PMEL GTMBA warm water volume",
+  "dataset": "wwv.dat, full basin 5N-5S 120E-80W",
+  "retrieval_url": "https://www.pmel.noaa.gov/tao/wwv/data/wwv.dat",
+  "units": "1e14 m^3",
+  "note": "Upper ocean heat content (volume above the 20 C isotherm). Its anomaly leads Nino 3.4 by about two seasons, the model's precursor.",
+  "span": [
+    "1980-01",
+    "2026-06"
+  ],
+  "month_count": 558,
+  "pulled_at_utc": "2026-08-13T14:44:23Z"
+}

@@ -21,6 +21,10 @@ OISST_BASE = (
 )
 ONI_URL = "https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt"
 CONTROL_URL = "https://www.cpc.ncep.noaa.gov/data/indices/ersst5.nino.mth.91-20.ascii"
+# Warm water volume (the ENSO precursor), NOAA PMEL GTMBA, full basin 5N-5S 120E-80W.
+WWV_URL = "https://www.pmel.noaa.gov/tao/wwv/data/wwv.dat"
+# The official CPC ENSO probability forecast (phase probabilities per 3 month season).
+CPC_FORECAST_URL = "https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/probabilities/"
 
 def oisst_url(date, preliminary=False):
     """The daily OISST netCDF url for a date (a datetime.date)."""

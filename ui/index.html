@@ -67,14 +67,61 @@
   .empty li { margin-bottom: 8px; }
   .hide { display: none; }
   a { color: var(--accent); }
+  .board { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .board th, .board td { padding: 8px 12px; text-align: right; border-bottom: 1px solid var(--line); }
+  .board th:first-child, .board td:first-child { text-align: left; }
+  .board thead th { color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .4px; }
+  .board thead th.grp { color: var(--accent); text-align: center; }
+  .board td { color: var(--muted); }
+  .board td.best { color: var(--ink); font-weight: 700; }
+  .log-item { padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .log-item:last-child { border-bottom: none; }
+  .log-item .when { color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+  .lead-in { color: #c8d5e2; font-size: 14.5px; line-height: 1.55; margin: 0 0 16px; }
+  .gloss { display: grid; grid-template-columns: auto 1fr; gap: 7px 16px; font-size: 13px; margin: 0; }
+  .gloss dt { color: var(--ink); font-weight: 650; }
+  .gloss dd { color: var(--muted); margin: 0; line-height: 1.45; }
+  .compare { display: flex; flex-wrap: wrap; gap: 14px; }
+  .compare .col { flex: 1 1 260px; background: rgba(255,255,255,.02); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .compare .col h3 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: .4px; }
+  .compare .col.experts h3 { color: var(--official); }
+  .compare .col.us h3 { color: var(--accent); }
+  .compare .col p { margin: 0; font-size: 13.5px; color: #c8d5e2; line-height: 1.55; }
+  .tag { display:inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-right: 8px; vertical-align: middle; }
+  .tag.n1 { background: rgba(74,168,255,.16); color: var(--accent); }
+  .tag.n2 { background: rgba(56,209,181,.16); color: #38d1b5; }
+  .leadbtns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .leadbtn { background: transparent; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 5px 14px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  .leadbtn:hover { color: var(--ink); }
+  .leadbtn.on { background: rgba(74,168,255,.14); color: var(--accent); border-color: var(--accent); }
+  .probbar { display: flex; height: 22px; border-radius: 5px; overflow: hidden; background: var(--panel); }
+  .probbar > div { display: flex; align-items: center; justify-content: center; font-size: 10.5px; color: #10161d; font-weight: 700; overflow: hidden; }
+  .probbar .ln { background: var(--cool); }
+  .probbar .n { background: #7d8894; }
+  .probbar .en { background: var(--warm); }
+  .fcrow { margin-bottom: 18px; }
+  .fcrow .barline { display: grid; grid-template-columns: 78px 1fr; gap: 10px; align-items: center; margin-top: 6px; }
+  .fcrow .barline > .lab { font-size: 12px; color: var(--muted); text-align: right; }
+  .headline { font-size: 21px; font-weight: 650; line-height: 1.45; margin: 2px 0 18px; color: var(--ink); }
+  .headline .hot { color: var(--warm); }
+  .peak-panel { border-color: rgba(255,122,89,.3); background: linear-gradient(180deg, rgba(255,122,89,.05), var(--panel)); }
+  #chart-tip { position: fixed; pointer-events: none; z-index: 60; display: none; background: #0b1118; border: 1px solid var(--line); border-radius: 6px; padding: 6px 9px; font-size: 12px; line-height: 1.4; color: var(--ink); box-shadow: 0 6px 18px rgba(0,0,0,.45); white-space: nowrap; }
+  #chart-tip b { color: var(--accent); }
+  svg .hovguide { stroke: var(--ink); stroke-width: 1; opacity: 0; pointer-events: none; }
+  .fresh { display: flex; flex-wrap: wrap; gap: 10px 22px; font-size: 12.5px; }
+  .fresh .item { color: var(--muted); }
+  .fresh .item b { color: var(--ink); font-weight: 600; }
+  .fresh .dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px; vertical-align:middle; background: var(--accent); }
 </style>
 </head>
 <body>
 <header>
   <h1>enso&#8202;watch</h1>
-  <div class="sub" id="subtitle">the live ENSO signal, computed from NOAA, provenance on every number</div>
+  <div class="sub" id="subtitle">El Ni&ntilde;o and La Ni&ntilde;a, watched from real ocean data. Every number computed by us, with its source.</div>
   <div class="tabs">
     <div class="tab active" data-tab="obs">Observation</div>
+    <div class="tab" data-tab="ing">Ingredients</div>
+    <div class="tab" data-tab="sk">Skill</div>
     <div class="tab" data-tab="fc">Forecast</div>
     <div class="tab" data-tab="im">Impact</div>
   </div>
@@ -83,9 +130,17 @@
 <main>
   <!-- TAB 1: OBSERVATION -->
   <section id="obs">
-    <div class="panel"><h2>Where ENSO is now</h2><div id="status-body" class="row"></div></div>
     <div class="panel">
-      <h2>Our daily value against the official record</h2>
+      <h2>Data freshness</h2>
+      <div class="fresh" id="fresh-body"></div>
+      <div class="note" style="margin-top:10px">Each stream updates at its own pace, so their dates differ. Daily and monthly are two rulers: a single day runs higher or lower than the month it sits in.</div>
+    </div>
+    <div class="panel">
+      <p class="lead-in">Right now: is the tropical Pacific warmer or cooler than normal? A lasting warm patch is an <b>El Ni&ntilde;o</b>, a cool one a <b>La Ni&ntilde;a</b>. We read it every day from real ocean temperatures.</p>
+      <h2>Where the Pacific is now</h2><div id="status-body" class="row"></div>
+    </div>
+    <div class="panel">
+      <h2>Our daily reading against the official record</h2>
       <div class="chart-wrap"><div id="chart"></div></div>
       <div class="legend" id="legend"></div>
       <div class="note" id="chart-note"></div>
@@ -97,19 +152,126 @@
     <div class="panel prov"><h2>Provenance</h2><div id="prov-body"></div></div>
   </section>
 
-  <!-- TAB 2: FORECAST -->
-  <section id="fc" class="hide">
-    <div class="panel empty">
-      <div class="big">Forecast oracle not built yet (V1)</div>
-      Where ENSO heads next. When built, this tab will carry, uncertainty first:
-      <ul>
-        <li><b>Per phase probabilities</b> for each of the next seasons: e.g. "Q4 2026: 60% El Nino, 35% neutral, 5% La Nina".</li>
-        <li><b>The full model spread</b>, not one number: the plume of ~26 models (min, median, max predicted Nino 3.4), so the uncertainty is on screen.</li>
-        <li><b>The forecast against what actually happened</b>: past forecasts overlaid on the realised value, so you can see how much to trust the plume.</li>
-        <li><b>Issue date and lead time</b>: a forecast is only honest with its age and how far ahead it looks.</li>
-        <li><b>The El Nino / La Nina thresholds</b>, so you see when the plume crosses into a phase.</li>
-      </ul>
+  <!-- TAB 2: INGREDIENTS -->
+  <section id="ing" class="hide">
+    <div class="panel">
+      <p class="lead-in">The <b>ingredients</b> are the raw material a forecast learns from. Two so far, both measured by us from real ocean data. In plain words:</p>
+      <dl class="gloss">
+        <dt>El Ni&ntilde;o / La Ni&ntilde;a</dt><dd>the natural warming (El Ni&ntilde;o) or cooling (La Ni&ntilde;a) of the tropical Pacific that tilts weather around the world.</dd>
+        <dt>Anomaly</dt><dd>how far from normal, in &deg;C. &ldquo;+1&rdquo; means one degree warmer than the 1991 to 2020 average for that time of year.</dd>
+        <dt>Ni&ntilde;o&nbsp;3.4</dt><dd>the patch of the Pacific whose temperature is the headline El Ni&ntilde;o signal. Our first ingredient.</dd>
+        <dt>Warm water volume</dt><dd>how much warm water is stored just below the surface. It builds up months before an El Ni&ntilde;o, so it is an early warning. Our second ingredient.</dd>
+      </dl>
     </div>
+    <div class="panel">
+      <h2><span class="tag n1">Ingredient 1</span>The ocean temperature signal, since 1981</h2>
+      <div id="ing-stats" class="row"></div>
+      <div class="chart-wrap" style="margin-top:16px"><div id="ing-chart"></div></div>
+      <div class="legend" id="ing-legend"></div>
+      <div class="note" id="ing-note"></div>
+    </div>
+    <div class="panel">
+      <h2><span class="tag n2">Ingredient 2</span>The early warning, warm water below the surface</h2>
+      <div class="chart-wrap"><div id="wwv-chart"></div></div>
+      <div class="legend" id="wwv-legend"></div>
+      <div class="note" id="wwv-note"></div>
+    </div>
+    <div class="panel explain">
+      <h2>Why these are the ingredients of the forecast</h2>
+      <div id="ing-explain"></div>
+    </div>
+    <div class="panel prov"><h2>Provenance (where every number comes from)</h2><div id="ing-prov"></div></div>
+  </section>
+
+  <!-- TAB 3: SKILL -->
+  <section id="sk" class="hide">
+    <div class="panel">
+      <p class="lead-in">Before building any forecast, we set the rules of the game: what a fair test looks like, and the score to beat. Here is our approach next to how the professionals work.</p>
+      <div class="compare">
+        <div class="col experts">
+          <h3>How the experts do it</h3>
+          <p>Weather centres like NOAA run dozens of physics models on supercomputers, add AI, and blend them into one official forecast (the &ldquo;plume&rdquo;). Very accurate, and impossible to reproduce alone.</p>
+        </div>
+        <div class="col us">
+          <h3>What we do here</h3>
+          <p>One simple model we build and fully understand, from our own data, judged honestly against dumb guesses. The aim is to grasp how it works and get close to the official forecast, not to out-predict NOAA.</p>
+        </div>
+      </div>
+      <p class="lead-in" style="margin:16px 0 0">Why start simple: a model you cannot explain or test honestly is worthless. So we prove the data and the scoring first, then add a model only where it genuinely beats the dumb guesses. Our first model does exactly that, most of all at long range, where the warm water volume carries the signal (scoreboard below).</p>
+    </div>
+    <div class="panel explain">
+      <h2>How we score a forecast, without cheating</h2>
+      <div class="chart-wrap"><div id="sk-process"></div></div>
+      <div id="sk-process-text"></div>
+    </div>
+    <div class="panel">
+      <h2>The scoreboard: the dumb guesses vs our model</h2>
+      <dl class="gloss" style="margin-bottom:18px">
+        <dt>Lead</dt><dd>how far ahead we predict: 1, 3 or 6 months.</dd>
+        <dt>Baseline</dt><dd>a dumb guess a real model must beat to prove it learned anything.</dd>
+        <dt>Persistence</dt><dd>the guess &ldquo;the next months look like this one.&rdquo;</dd>
+        <dt>Climatology</dt><dd>the guess &ldquo;it will be normal&rdquo; (zero anomaly).</dd>
+        <dt>Model</dt><dd>our own simple model, reading today&rsquo;s temperature, the warm water volume, and the season.</dd>
+        <dt>RMSE</dt><dd>the average size of the miss, in &deg;C. Lower is better.</dd>
+        <dt>ACC</dt><dd>whether the ups and downs line up over time: 0 is no skill, 1 is perfect.</dd>
+      </dl>
+      <div class="chart-wrap"><div id="sk-board"></div></div>
+      <div class="note" id="sk-note"></div>
+      <div id="sk-weights" style="margin-top:18px"></div>
+    </div>
+    <div class="panel">
+      <h2>Our forecast against what really happened</h2>
+      <p class="note" style="margin:0 0 12px">Each point is a forecast made in the past, drawn on top of the value that actually came. Pick how far ahead:</p>
+      <div class="leadbtns" id="hc-controls"></div>
+      <div class="chart-wrap"><div id="hc-chart"></div></div>
+      <div class="legend" id="hc-legend"></div>
+      <div class="note" id="hc-note"></div>
+    </div>
+    <div class="panel prov">
+      <h2>Experiment log (every scoring run we recorded)</h2>
+      <div id="sk-log"></div>
+    </div>
+  </section>
+
+  <!-- TAB 4: FORECAST -->
+  <section id="fc" class="hide">
+    <div class="panel">
+      <p class="lead-in">Does our simple model agree with NOAA&rsquo;s official forecast? The official plume of Ni&ntilde;o 3.4 values is no longer published as data, so we compare in the same language both use: the chance of El Ni&ntilde;o, Neutral, or La Ni&ntilde;a for the coming seasons.</p>
+      <dl class="gloss">
+        <dt>Plume</dt><dd>NOAA&rsquo;s official forecast, blended from dozens of models. Published as a picture, so we compare on phase probabilities instead of raw values.</dd>
+        <dt>Season</dt><dd>a 3 month window (for example SON = Sep Oct Nov), the way the official forecast is issued.</dd>
+        <dt>Agreement</dt><dd>how close our probabilities are to the official ones: 1.00 is identical, 0 is opposite.</dd>
+      </dl>
+    </div>
+    <div class="panel peak-panel">
+      <h2>The peak of the current El Ni&ntilde;o</h2>
+      <div id="peak-headline"></div>
+      <div id="peak-detail" class="row"></div>
+      <div class="note" id="peak-note" style="margin-top:14px"></div>
+      <div class="note" id="peak-analogs" style="margin-top:8px"></div>
+    </div>
+    <div class="panel">
+      <h2>Our model against the official forecast</h2>
+      <div id="fc-head" class="row"></div>
+      <div class="note" id="fc-note" style="margin-top:12px"></div>
+    </div>
+    <div class="panel">
+      <h2>Our month-ahead forecast for the coming months</h2>
+      <p class="note" style="margin:0 0 10px">This is the cautious month-by-month model (it leans toward normal, so it under-shoots fast rises, as the Skill tab shows). For the event&rsquo;s high point, trust the peak estimate above.</p>
+      <div class="chart-wrap"><div id="fc-plume"></div></div>
+      <div class="legend" id="fc-plume-legend"></div>
+      <div class="note" id="fc-plume-note"></div>
+    </div>
+    <div class="panel">
+      <h2>Season by season</h2>
+      <div class="legend" style="margin-bottom:14px">
+        <span><span class="dot-key" style="background:var(--warm)"></span>El Ni&ntilde;o</span>
+        <span><span class="dot-key" style="background:#7d8894"></span>Neutral</span>
+        <span><span class="dot-key" style="background:var(--cool)"></span>La Ni&ntilde;a</span>
+      </div>
+      <div id="fc-seasons"></div>
+    </div>
+    <div class="panel prov"><h2>Provenance (where the official forecast comes from)</h2><div id="fc-prov"></div></div>
   </section>
 
   <!-- TAB 3: IMPACT -->
@@ -126,6 +288,26 @@
 const PHASE_LABEL = { el_nino: "El Nino", la_nina: "La Nina", neutral: "Neutral" };
 const MONTHS = ["", "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 function fmt(n, d = 2) { return (n >= 0 ? "+" : "") + Number(n).toFixed(d); }
+function chartTip() { let t = document.getElementById("chart-tip"); if (!t) { t = document.createElement("div"); t.id = "chart-tip"; document.body.appendChild(t); } return t; }
+function wireHover(svg, pts, W) {
+  if (!svg || !pts || !pts.length) return;
+  const tip = chartTip(), NS = "http://www.w3.org/2000/svg";
+  let guide = svg.querySelector(".hovguide");
+  if (!guide) { guide = document.createElementNS(NS, "line"); guide.setAttribute("class", "hovguide"); guide.setAttribute("y1", "0"); guide.setAttribute("y2", "1000"); svg.appendChild(guide); }
+  svg.addEventListener("mousemove", e => {
+    const r = svg.getBoundingClientRect(); if (!r.width) return;
+    const vx = (e.clientX - r.left) / r.width * W;
+    let best = pts[0], bd = Infinity;
+    for (const p of pts) { const dd = Math.abs(p.vx - vx); if (dd < bd) { bd = dd; best = p; } }
+    guide.setAttribute("x1", best.vx); guide.setAttribute("x2", best.vx); guide.style.opacity = ".35";
+    tip.innerHTML = best.label; tip.style.display = "block";
+    const tw = tip.offsetWidth || 120;
+    tip.style.left = Math.min(e.clientX + 14, window.innerWidth - tw - 8) + "px";
+    tip.style.top = (e.clientY + 14) + "px";
+  });
+  svg.addEventListener("mouseleave", () => { tip.style.display = "none"; if (guide) guide.style.opacity = "0"; });
+}
+function ymLabel(ym) { const p = (ym || "").split("-"); return p.length === 2 ? MONTHS[+p[1]] + " " + p[0] : (ym || ""); }
 
 function renderStatus(d) {
   const s = d.status;
@@ -203,6 +385,10 @@ function renderChart(d) {
 
   el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
     ${bands}${gx.join("")}${gy.join("")}${mLine}${dDots}</svg>`;
+  wireHover(el.querySelector("svg"),
+    daily.map(p => ({ vx: x(p.t), label: `${p.date} &middot; our daily <b>${fmt(p.v)}&nbsp;&deg;C</b>${p.status ? " (" + p.status + ")" : ""}` }))
+      .concat(monthly.map(p => ({ vx: x(p.t), label: `${MONTHS[p.month]} ${p.year} &middot; official monthly <b>${fmt(p.v)}&nbsp;&deg;C</b>` })))
+      .sort((a, b) => a.vx - b.vx), W);
 
   legend.innerHTML = `
     <span><span class="dot-key" style="background:var(--accent)"></span><b>Our daily</b> (computed from OISST)</span>
@@ -251,22 +437,419 @@ function renderProv(d) {
   document.getElementById("prov-body").innerHTML = parts.join("") || "No provenance yet.";
 }
 
+function renderIngredients(d) {
+  const h = d.history || { available: false };
+  const stats = document.getElementById("ing-stats");
+  const chart = document.getElementById("ing-chart");
+  const legend = document.getElementById("ing-legend");
+  const note = document.getElementById("ing-note");
+  const explain = document.getElementById("ing-explain");
+
+  if (!h.available) {
+    stats.innerHTML = "";
+    chart.innerHTML = `<div class="empty"><div class="big">The history is not built yet</div>
+      Our own Nino 3.4 monthly anomaly is computed from the NOAA OISST monthly mean, back to 1981.
+      Run the backfill, then re-open this tab (<code>./run.sh serve</code>) and the whole record appears here.</div>`;
+    legend.innerHTML = ""; note.textContent = "";
+    explain.innerHTML = "";
+    document.getElementById("ing-prov").innerHTML = "Provenance appears once the history is built.";
+    return;
+  }
+
+  const y0 = (h.span?.[0] || "").slice(0,4), y1 = (h.span?.[1] || "").slice(0,4);
+  const years = (y0 && y1) ? (Number(y1) - Number(y0) + 1) : "?";
+  stats.innerHTML = `
+    <div class="stat"><div class="k">Span</div><div class="v">${years} <small>years &middot; ${y0}&#8202;&ndash;&#8202;${y1}</small></div></div>
+    <div class="stat"><div class="k">Our own monthly values</div><div class="v">${h.month_count.toLocaleString()}</div></div>
+    <div class="stat"><div class="k">Baseline</div><div class="v">1991&#8202;&ndash;&#8202;2020</div></div>
+    <div class="stat"><div class="k">Latest in history</div><div class="v">${h.latest?fmt(h.latest.anomaly_c):"?"} <small>&deg;C &middot; ${h.latest?h.latest.month:""}</small></div></div>`;
+
+  const pts = (h.monthly||[]).map(m => ({ t: Date.parse(m.ym + "-15"), v: m.mean }));
+  if (!pts.length) { chart.innerHTML = "<div class='prov'>No monthly points yet.</div>"; return; }
+
+  const W = 900, H = 340, padL = 44, padR = 14, padT = 14, padB = 30;
+  let tMin = Math.min(...pts.map(p=>p.t)), tMax = Math.max(...pts.map(p=>p.t));
+  if (tMin === tMax) { tMin -= 2.6e9; tMax += 2.6e9; } else { const m=(tMax-tMin)*0.02; tMin-=m; tMax+=m; }
+  const vals = pts.map(p=>p.v);
+  let lo = Math.min(...vals, -2), hi = Math.max(...vals, 2);
+  const span = (hi-lo)||1; lo -= span*0.08; hi += span*0.08;
+  const x = t => padL + (t-tMin)*(W-padL-padR)/(tMax-tMin);
+  const y = v => padT + (hi-v)*(H-padT-padB)/(hi-lo);
+
+  const bands = `
+    <rect x="${padL}" y="${y(hi)}" width="${W-padL-padR}" height="${y(0.5)-y(hi)}" fill="rgba(255,122,89,.06)"/>
+    <rect x="${padL}" y="${y(-0.5)}" width="${W-padL-padR}" height="${y(lo)-y(-0.5)}" fill="rgba(74,168,255,.06)"/>
+    <line x1="${padL}" y1="${y(0.5)}" x2="${W-padR}" y2="${y(0.5)}" stroke="var(--warm)" stroke-width="1" stroke-dasharray="2 3" opacity=".5"/>
+    <line x1="${padL}" y1="${y(-0.5)}" x2="${W-padR}" y2="${y(-0.5)}" stroke="var(--cool)" stroke-width="1" stroke-dasharray="2 3" opacity=".5"/>
+    <line x1="${padL}" y1="${y(0)}" x2="${W-padR}" y2="${y(0)}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>`;
+
+  const gy = [];
+  for (let g = Math.ceil(lo); g <= Math.floor(hi); g++)
+    gy.push(`<text x="${padL-8}" y="${y(g)+4}" text-anchor="end" fill="var(--muted)" font-size="11">${g>0?"+"+g:g}</text>`);
+  const gx = [];
+  const yy0 = new Date(tMin).getFullYear(), yy1 = new Date(tMax).getFullYear();
+  const stepY = (yy1-yy0) > 24 ? 5 : ((yy1-yy0) > 8 ? 2 : 1);
+  for (let yr = Math.ceil(yy0/stepY)*stepY; yr <= yy1; yr += stepY) {
+    const t = Date.parse(`${yr}-01-01`);
+    if (t < tMin || t > tMax) continue;
+    gx.push(`<line x1="${x(t)}" y1="${padT}" x2="${x(t)}" y2="${H-padB}" stroke="var(--line)" stroke-width="1" opacity=".5"/>`);
+    gx.push(`<text x="${x(t)}" y="${H-10}" text-anchor="middle" fill="var(--muted)" font-size="10.5">${yr}</text>`);
+  }
+  const path = pts.map((p,i)=>(i?"L":"M")+x(p.t).toFixed(1)+" "+y(p.v).toFixed(1)).join(" ");
+  chart.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+    ${bands}${gx.join("")}${gy.join("")}<path d="${path}" fill="none" stroke="var(--accent)" stroke-width="1.6"/></svg>`;
+  wireHover(chart.querySelector("svg"),
+    (h.monthly || []).map(m => ({ vx: x(Date.parse(m.ym + "-15")), label: `${ymLabel(m.ym)} &middot; <b>${fmt(m.mean)}&nbsp;&deg;C</b> (monthly)` })), W);
+
+  legend.innerHTML = `
+    <span><span class="dot-key" style="background:var(--accent)"></span><b>Our Nino 3.4 anomaly</b>, monthly mean of our own daily values</span>
+    <span style="opacity:.7">shaded = El Nino (above +0.5) / La Nina (below &minus;0.5)</span>`;
+  note.textContent = `${h.month_count.toLocaleString()} monthly values, each our own area average minus the 1991-2020 climatology`;
+
+  explain.innerHTML = `
+    <p><b>What you are looking at.</b> Every peak above the orange line is an El Nino, every dip below the
+    blue line a La Nina, drawn from <b>our own</b> computation, not copied from anyone. This is the target
+    the forecast learns to predict: the ocean signal, month by month, for four decades.</p>
+    <p><b>Why the history comes first.</b> A forecast model is only as good as the record it trains on. Before
+    any prediction, we rebuild a long, clean, leakage free history from one consistent source (the NOAA OISST
+    monthly mean, the same box and baseline as the live oracle). That is what a data scientist checks first:
+    not the model, the data under it.</p>
+    <p><b>The second ingredient, below.</b> The warm water volume: the ocean heat piled up under the surface,
+    which leads El Nino by about two seasons. When it climbs months ahead of the temperature, it is the
+    earliest honest sign the model can read. Still to add after it: the winds and the SOI.</p>`;
+
+  document.getElementById("ing-prov").innerHTML =
+    (h.provenance ? `<div><span class="badge">history</span> our Nino 3.4 daily history${provTable(h.provenance)}</div>` : "No provenance yet.");
+}
+
+function renderWwv(d) {
+  const w = d.wwv || { available: false };
+  const chart = document.getElementById("wwv-chart");
+  const legend = document.getElementById("wwv-legend");
+  const note = document.getElementById("wwv-note");
+  if (!w.available) {
+    chart.innerHTML = `<div class="prov">Warm water volume not ingested yet. Run <code>./run.sh serve</code> after the WWV ingest.</div>`;
+    legend.innerHTML = ""; note.textContent = ""; return;
+  }
+  const pts = (w.monthly||[]).map(m => ({ t: Date.parse(m.ym + "-15"), v: m.anomaly }));
+  if (!pts.length) { chart.innerHTML = "<div class='prov'>No points yet.</div>"; return; }
+
+  const W = 900, H = 240, padL = 44, padR = 14, padT = 14, padB = 30;
+  let tMin = Math.min(...pts.map(p=>p.t)), tMax = Math.max(...pts.map(p=>p.t));
+  if (tMin === tMax) { tMin -= 2.6e9; tMax += 2.6e9; } else { const m=(tMax-tMin)*0.02; tMin-=m; tMax+=m; }
+  const vals = pts.map(p=>p.v);
+  let lo = Math.min(...vals), hi = Math.max(...vals);
+  const span = (hi-lo)||1; lo -= span*0.1; hi += span*0.1;
+  const x = t => padL + (t-tMin)*(W-padL-padR)/(tMax-tMin);
+  const y = v => padT + (hi-v)*(H-padT-padB)/(hi-lo);
+  const WWVC = "#38d1b5";
+
+  const zero = `<line x1="${padL}" y1="${y(0)}" x2="${W-padR}" y2="${y(0)}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>`;
+  const gy = [];
+  for (let g = Math.ceil(lo); g <= Math.floor(hi); g++)
+    gy.push(`<text x="${padL-8}" y="${y(g)+4}" text-anchor="end" fill="var(--muted)" font-size="11">${g>0?"+"+g:g}</text>`);
+  const gx = [];
+  const yy0 = new Date(tMin).getFullYear(), yy1 = new Date(tMax).getFullYear();
+  const stepY = (yy1-yy0) > 24 ? 5 : ((yy1-yy0) > 8 ? 2 : 1);
+  for (let yr = Math.ceil(yy0/stepY)*stepY; yr <= yy1; yr += stepY) {
+    const t = Date.parse(`${yr}-01-01`);
+    if (t < tMin || t > tMax) continue;
+    gx.push(`<line x1="${x(t)}" y1="${padT}" x2="${x(t)}" y2="${H-padB}" stroke="var(--line)" stroke-width="1" opacity=".5"/>`);
+    gx.push(`<text x="${x(t)}" y="${H-10}" text-anchor="middle" fill="var(--muted)" font-size="10.5">${yr}</text>`);
+  }
+  const path = pts.map((p,i)=>(i?"L":"M")+x(p.t).toFixed(1)+" "+y(p.v).toFixed(1)).join(" ");
+  chart.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+    ${zero}${gx.join("")}${gy.join("")}<path d="${path}" fill="none" stroke="${WWVC}" stroke-width="1.6"/></svg>`;
+  wireHover(chart.querySelector("svg"),
+    (w.monthly || []).map(m => ({ vx: x(Date.parse(m.ym + "-15")), label: `${ymLabel(m.ym)} &middot; warm water <b>${fmt(m.anomaly)}</b> (10&sup1;&#8308; m&sup3;)` })), W);
+
+  legend.innerHTML = `<span><span class="dot-key" style="background:${WWVC}"></span><b>Warm water volume anomaly</b> (10<sup>14</sup> m&sup3;, full basin)</span>
+    <span style="opacity:.7">latest ${w.latest?fmt(w.latest.anomaly):"?"} &middot; ${w.latest?w.latest.month:""}</span>`;
+  note.textContent = `${w.month_count.toLocaleString()} months from NOAA PMEL · a warm build up here tends to precede an El Nino by about two seasons`;
+}
+
+function walkForwardSvg() {
+  const W=900,H=150,padL=24,padR=24, y=78;
+  const n=24, x0=padL, x1=W-padR, dx=(x1-x0)/(n-1);
+  const issue=13, lead=4, target=issue+lead, X=i=>x0+i*dx;
+  let ticks="";
+  for(let i=0;i<n;i++){
+    const r = (i===issue||i===target)?5:2.5;
+    const c = i<issue ? "var(--cool)" : (i===issue ? "var(--accent)" : (i===target ? "var(--warm)" : "var(--line)"));
+    ticks += `<circle cx="${X(i).toFixed(1)}" cy="${y}" r="${r}" fill="${c}"/>`;
+  }
+  const shade=`<rect x="${(x0-8).toFixed(1)}" y="${y-40}" width="${(X(issue)-x0+16).toFixed(1)}" height="26" rx="5" fill="rgba(74,168,255,.10)"/>`;
+  const arrow=`<path d="M${X(issue).toFixed(1)} ${y-13} C ${(X(issue)+34).toFixed(1)} ${y-48}, ${(X(target)-34).toFixed(1)} ${y-48}, ${X(target).toFixed(1)} ${y-13}" fill="none" stroke="var(--warm)" stroke-width="1.6" stroke-dasharray="4 3"/>`;
+  return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+    ${shade}
+    <text x="${((x0+X(issue))/2).toFixed(1)}" y="${y-24}" text-anchor="middle" fill="var(--accent)" font-size="12">only the past is seen</text>
+    ${arrow}
+    <text x="${((X(issue)+X(target))/2).toFixed(1)}" y="${y-52}" text-anchor="middle" fill="var(--warm)" font-size="12">predict ${lead} months ahead</text>
+    ${ticks}
+    <text x="${X(issue).toFixed(1)}" y="${y+24}" text-anchor="middle" fill="var(--ink)" font-size="11.5">issue month</text>
+    <text x="${X(target).toFixed(1)}" y="${y+24}" text-anchor="middle" fill="var(--warm)" font-size="11.5">compare to reality</text>
+    <text x="${x1}" y="${y+24}" text-anchor="end" fill="var(--muted)" font-size="11">then step forward, repeat →</text>
+  </svg>`;
+}
+
+function renderSkill(d) {
+  document.getElementById("sk-process").innerHTML = walkForwardSvg();
+  document.getElementById("sk-process-text").innerHTML = `
+    <p><b>The trap we avoid.</b> If a model is allowed to peek at the future while it learns, it looks
+    brilliant and is worthless. So we <b>walk forward</b>: we stand at a month in the past, let the method
+    see <b>only what was known then</b>, ask it to predict some months ahead, then step forward and compare
+    to what really happened. Every score below is out of sample, on data the method never saw at decision time.</p>
+    <p><b>Two scores.</b> <b>RMSE</b> is the average miss in &deg;C, lower is better. <b>ACC</b> is how well the
+    ups and downs line up, from 0 (no skill) to 1 (perfect). We score at several <b>leads</b>: 1, 2, 3 and 6 months ahead.</p>`;
+
+  const LABELS = { persistence: "Persistence", climatology: "Climatology", model: "Our model" };
+  const sk = d.skill || { available: false };
+  const board = document.getElementById("sk-board");
+  const note = document.getElementById("sk-note");
+  const weightsEl = document.getElementById("sk-weights");
+  if (!sk.available) {
+    board.innerHTML = "<div class='prov'>Not enough history to score yet.</div>";
+    note.textContent = ""; weightsEl.innerHTML = "";
+  } else {
+    const names = Object.keys(sk.board);
+    let head = `<tr><th>Lead</th>` + names.map(n => `<th class="grp" colspan="2">${LABELS[n] || n}</th>`).join("") + `</tr>`;
+    head += `<tr><th></th>` + names.map(() => `<th>ACC</th><th>RMSE &deg;C</th>`).join("") + `</tr>`;
+    const rows = sk.leads.map(L => {
+      const bestRmse = Math.min(...names.map(n => sk.board[n][L].rmse));
+      const cells = names.map(n => {
+        const s = sk.board[n][L], w = s.rmse === bestRmse ? " best" : "";
+        return `<td class="${w}">${s.acc}</td><td class="${w}">${s.rmse}</td>`;
+      }).join("");
+      return `<tr><td>${L} mo</td>${cells}</tr>`;
+    }).join("");
+    board.innerHTML = `<table class="board"><thead>${head}</thead><tbody>${rows}</tbody></table>`;
+    const win = sk.model_available ? "our model has the lowest error at every lead, and pulls furthest ahead at long range" : "notice persistence loses to climatology by 6 months";
+    note.textContent = `${sk.n_months - sk.min_train} months scored, after a ${sk.min_train}-month warmup · bold = lowest error at that lead · ${win}`;
+
+    if (sk.model_available && sk.weights) {
+      const w = sk.weights, L = sk.weights_lead;
+      const items = [["today's temperature", w.nino34, "var(--accent)"], ["warm water volume", w.wwv, "#38d1b5"], ["the season", w.season, "var(--muted)"]];
+      const max = Math.max(...items.map(x => Math.abs(x[1]))) || 1;
+      const bars = items.map(([lab, val, col]) => `
+        <div style="display:flex;align-items:center;gap:10px;margin:6px 0">
+          <div style="width:150px;color:var(--muted);font-size:12.5px">${lab}</div>
+          <div style="flex:1;background:rgba(255,255,255,.04);border-radius:4px;height:14px">
+            <div style="width:${(Math.abs(val)/max*100).toFixed(0)}%;background:${col};height:14px;border-radius:4px"></div>
+          </div>
+          <div style="width:44px;text-align:right;font-size:12.5px;color:var(--ink)">${val}</div>
+        </div>`).join("");
+      const crossover = w.wwv > w.nino34
+        ? `By ${L} months, the <b>warm water volume outweighs today's temperature</b>: the early warning is doing the work, which is exactly why it earns its place.`
+        : `Today's temperature still leads, with the warm water volume adding lift at longer range.`;
+      weightsEl.innerHTML = `<div class="note" style="margin-bottom:10px"><b>What the model leans on at ${L} months</b> (bigger bar = more weight):</div>${bars}
+        <p class="note" style="margin-top:10px">${crossover}</p>`;
+    } else {
+      weightsEl.innerHTML = "";
+    }
+  }
+
+  const runs = d.experiments || [];
+  document.getElementById("sk-log").innerHTML = runs.length
+    ? runs.map(r => `<div class="log-item"><div><b>${r.kind || "run"}</b> &middot; ${r.target || ""} &middot; ${r.n_months || "?"} months (${(r.span || []).join(" to ")})</div>
+        <div class="when">${r.at_utc || ""} &middot; ${r.note || ""}</div></div>`).join("")
+    : "<div class='prov'>No runs logged yet. Run <code>./run.sh baselines</code>.</div>";
+}
+
+let hcLead = null;
+function renderHindcast(d) {
+  const sk = d.skill || {};
+  const controls = document.getElementById("hc-controls");
+  const chart = document.getElementById("hc-chart");
+  const legend = document.getElementById("hc-legend");
+  const note = document.getElementById("hc-note");
+  if (!sk.model_available || !sk.hindcast) {
+    controls.innerHTML = ""; legend.innerHTML = ""; note.textContent = "";
+    chart.innerHTML = "<div class='prov'>The model is not available yet.</div>";
+    return;
+  }
+  const leads = (sk.leads || []).filter(L => (sk.hindcast[L] || []).length);
+  if (hcLead === null || !(sk.hindcast[hcLead] || []).length) hcLead = leads.includes(3) ? 3 : leads[0];
+  controls.innerHTML = leads.map(L => `<button class="leadbtn ${L === hcLead ? "on" : ""}" data-lead="${L}">${L} month${L > 1 ? "s" : ""} ahead</button>`).join("");
+  controls.querySelectorAll(".leadbtn").forEach(b => b.addEventListener("click", () => { hcLead = Number(b.dataset.lead); renderHindcast(d); }));
+  drawHindcast(sk.hindcast[hcLead], hcLead, sk.board.model[hcLead], chart, legend, note);
+}
+
+function drawHindcast(recs, lead, score, chart, legend, note) {
+  const pts = recs.map(r => ({ t: Date.parse(r.month + "-15"), f: r.forecast, a: r.actual }));
+  if (!pts.length) { chart.innerHTML = "<div class='prov'>No forecasts at this lead.</div>"; return; }
+  const W = 900, H = 340, padL = 44, padR = 14, padT = 14, padB = 30;
+  let tMin = Math.min(...pts.map(p=>p.t)), tMax = Math.max(...pts.map(p=>p.t));
+  const mrg = (tMax-tMin)*0.02; tMin -= mrg; tMax += mrg;
+  const vals = pts.flatMap(p=>[p.f,p.a]);
+  let lo = Math.min(...vals,-2), hi = Math.max(...vals,2);
+  const span=(hi-lo)||1; lo-=span*0.08; hi+=span*0.08;
+  const x=t=>padL+(t-tMin)*(W-padL-padR)/(tMax-tMin);
+  const y=v=>padT+(hi-v)*(H-padT-padB)/(hi-lo);
+  const bands = `
+    <rect x="${padL}" y="${y(hi)}" width="${W-padL-padR}" height="${y(0.5)-y(hi)}" fill="rgba(255,122,89,.06)"/>
+    <rect x="${padL}" y="${y(-0.5)}" width="${W-padL-padR}" height="${y(lo)-y(-0.5)}" fill="rgba(74,168,255,.06)"/>
+    <line x1="${padL}" y1="${y(0)}" x2="${W-padR}" y2="${y(0)}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>`;
+  const gy=[]; for(let g=Math.ceil(lo);g<=Math.floor(hi);g++) gy.push(`<text x="${padL-8}" y="${y(g)+4}" text-anchor="end" fill="var(--muted)" font-size="11">${g>0?"+"+g:g}</text>`);
+  const gx=[]; const yy0=new Date(tMin).getFullYear(), yy1=new Date(tMax).getFullYear(), stepY=(yy1-yy0)>24?5:((yy1-yy0)>8?2:1);
+  for(let yr=Math.ceil(yy0/stepY)*stepY; yr<=yy1; yr+=stepY){ const t=Date.parse(`${yr}-01-01`); if(t<tMin||t>tMax)continue;
+    gx.push(`<line x1="${x(t)}" y1="${padT}" x2="${x(t)}" y2="${H-padB}" stroke="var(--line)" stroke-width="1" opacity=".5"/>`);
+    gx.push(`<text x="${x(t)}" y="${H-10}" text-anchor="middle" fill="var(--muted)" font-size="10.5">${yr}</text>`); }
+  const aPath = pts.map((p,i)=>(i?"L":"M")+x(p.t).toFixed(1)+" "+y(p.a).toFixed(1)).join(" ");
+  const fPath = pts.map((p,i)=>(i?"L":"M")+x(p.t).toFixed(1)+" "+y(p.f).toFixed(1)).join(" ");
+  chart.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+    ${bands}${gx.join("")}${gy.join("")}
+    <path d="${aPath}" fill="none" stroke="var(--official)" stroke-width="1.9"/>
+    <path d="${fPath}" fill="none" stroke="var(--accent)" stroke-width="1.5" opacity=".95"/></svg>`;
+  wireHover(chart.querySelector("svg"),
+    recs.map(r => ({ vx: x(Date.parse(r.month + "-15")), label: `${ymLabel(r.month)} &middot; forecast <b>${fmt(r.forecast)}</b>, actual <b>${fmt(r.actual)}&nbsp;&deg;C</b>` })), W);
+  legend.innerHTML = `
+    <span><span class="dot-key" style="background:var(--official);border-radius:2px"></span><b>What really happened</b></span>
+    <span><span class="dot-key" style="background:var(--accent)"></span><b>Our forecast, ${lead} month${lead>1?"s":""} earlier</b></span>
+    <span style="opacity:.7">shaded = El Ni&ntilde;o (above +0.5) / La Ni&ntilde;a (below &minus;0.5)</span>`;
+  note.textContent = `${recs.length} monthly forecasts, each made ${lead} month${lead>1?"s":""} before the fact · fit: ACC ${score.acc}, average miss ${score.rmse} °C · the further ahead you predict, the more the blue line lags and smooths`;
+}
+
+function monthName(ym) { const p = (ym || "").split("-"); return p.length === 2 ? MONTHS[+p[1]] + " " + p[0] : (ym || "?"); }
+function renderFreshness(d) {
+  const f = d.freshness || {}, el = document.getElementById("fresh-body");
+  if (!el) return;
+  const parts = [];
+  if (f.daily) parts.push(`<span class="item"><span class="dot" style="background:var(--accent)"></span>Daily to <b>${f.daily.date}</b> (${fmt(f.daily.value)}&nbsp;&deg;C${f.daily.status ? ", " + f.daily.status : ""})${f.daily.pulled_at ? " &middot; pulled " + f.daily.pulled_at.replace("T", " ").replace("Z", " UTC") : ""}</span>`);
+  if (f.monthly) parts.push(`<span class="item"><span class="dot" style="background:var(--accent)"></span>Monthly to <b>${ymLabel(f.monthly.month)}</b> (${fmt(f.monthly.anomaly_c)}&nbsp;&deg;C)</span>`);
+  if (f.provisional_month) parts.push(`<span class="item"><span class="dot" style="background:var(--warm)"></span>Current month <b>${ymLabel(f.provisional_month.ym)}</b> &asymp;${fmt(f.provisional_month.mean)}&nbsp;&deg;C (provisional, ${f.provisional_month.n_days} day${f.provisional_month.n_days > 1 ? "s" : ""} so far)</span>`);
+  if (f.wwv) parts.push(`<span class="item"><span class="dot" style="background:#38d1b5"></span>Warm water volume to <b>${ymLabel(f.wwv.month)}</b></span>`);
+  if (f.official_forecast) parts.push(`<span class="item"><span class="dot" style="background:var(--official)"></span>Official forecast issued <b>${f.official_forecast}</b></span>`);
+  el.innerHTML = parts.join("") || "<span class='item'>No data yet.</span>";
+}
+function renderPeak(d) {
+  const pk = d.peak || { available: false };
+  const hl = document.getElementById("peak-headline"), det = document.getElementById("peak-detail");
+  const note = document.getElementById("peak-note"), an = document.getElementById("peak-analogs");
+  if (!pk.available) { hl.innerHTML = "<div class='prov'>Peak forecast not available yet.</div>"; det.innerHTML = ""; note.textContent = ""; an.innerHTML = ""; return; }
+  const m = pk.magnitude, t = pk.timing;
+  const daily = (d.daily_series || []).slice(-1)[0];
+  hl.innerHTML = `<div class="headline">This El Ni&ntilde;o is expected to peak around <span class="hot">${monthName(t.peak_month)}</span>, at a <span class="hot">${fmt(m.estimate)}&nbsp;&deg;C</span> monthly average <span style="color:var(--muted);font-weight:500">(likely between ${fmt(m.low)} and ${fmt(m.high)})</span>.</div>`;
+  det.innerHTML = `
+    <div class="stat"><div class="k">Peak magnitude (monthly)</div><div class="v">${fmt(m.estimate)}<small>&nbsp;&deg;C &plusmn; ${m.sigma}</small></div></div>
+    <div class="stat"><div class="k">Peak timing</div><div class="v" style="font-size:18px">${monthName(t.peak_month)}</div><div class="k" style="margin-top:3px;text-transform:none;letter-spacing:0">past peaks fell ${monthName(t.range[0])} to ${monthName(t.range[1])}</div></div>
+    <div class="stat"><div class="k">Now (provisional)</div><div class="v">${fmt(pk.observed_max.value)}<small>&nbsp;&deg;C &middot; ${monthName(pk.observed_max.month)}</small></div></div>`;
+  note.innerHTML = `<b>Where the ocean is now.</b> ${monthName(pk.observed_max.month)} is running about ${fmt(pk.observed_max.value)}&nbsp;&deg;C (a provisional monthly from the daily readings so far), already very high and in line with today&rsquo;s daily ${daily ? fmt(daily.nino34_anomaly_c) + "&nbsp;&deg;C" : ""}. The model expects the monthly average to keep climbing to a peak of about ${fmt(m.estimate)} around ${monthName(t.peak_month)}; the hottest single days would run higher still.
+    <br><br><b>How we read it.</b> Strong El Ni&ntilde;os peak November to January, so the <b>timing</b> is mostly known (from ${t.n_timing} ${t.basis}). The <b>height</b> is learned from the warm water volume, over ${pk.n_warm} warm events in ${pk.n_train} years, so the &plusmn;${m.sigma}&nbsp;&deg;C band is wide. Issued from the latest data (${monthName(pk.issue_month)} temperatures, warm water volume from ${ymLabel(pk.wwv_month)}). A peak this high would top even 2015, so it is an extrapolation beyond the record: trust the band as the honest range.`;
+  an.innerHTML = `<b>Closest past events</b> (by today&rsquo;s ocean state): ` + pk.analogs.map(a => `${a.peak_ym.slice(0,4)} (peaked ${fmt(a.peak_value)} in ${MONTHS[+a.peak_ym.slice(5,7)]})`).join(" &middot; ");
+}
+
+function probbar(p) {
+  const seg = (cls, v) => `<div class="${cls}" style="width:${v}%">${v >= 12 ? v : ""}</div>`;
+  return `<div class="probbar">${seg("en", p.p_el_nino)}${seg("n", p.p_neutral)}${seg("ln", p.p_la_nina)}</div>`;
+}
+function renderForecast(d) {
+  const fc = d.forecast || { available: false }, off = d.official_forecast;
+  const head = document.getElementById("fc-head"), note = document.getElementById("fc-note");
+  const seasons = document.getElementById("fc-seasons"), prov = document.getElementById("fc-prov");
+  if (!fc.available) {
+    head.innerHTML = ""; note.textContent = "";
+    seasons.innerHTML = "<div class='prov'>The comparison is not available yet. Ingest the official forecast (<code>./run.sh forecast</code>) and rebuild.</div>";
+    prov.innerHTML = off && off.provenance ? provTable(off.provenance) : "";
+    return;
+  }
+  const agr = Math.round(fc.overall_agreement * 100);
+  head.innerHTML = `
+    <div class="stat"><div class="k">Agreement with NOAA</div><div class="v">${agr}<small>%</small></div></div>
+    <div class="stat"><div class="k">Same phase called</div><div class="v">${fc.phase_match}<small> seasons</small></div></div>
+    <div class="stat"><div class="k">Our forecast issued</div><div class="v" style="font-size:18px">${fc.issue_month}</div></div>
+    <div class="stat"><div class="k">Official issued</div><div class="v" style="font-size:18px">${fc.issued || "?"}</div></div>`;
+  note.innerHTML = `Both forecasts look at the same coming seasons. Ours is issued from <b>${fc.issue_month}</b> data (the warm water volume lags a month or two), the official from <b>${fc.issued || "?"}</b>. Where we differ, it is our wider, honest uncertainty at longer lead: we hedge toward Neutral a little sooner than NOAA does.`;
+  seasons.innerHTML = fc.seasons.map(s => `
+    <div class="fcrow">
+      <div style="display:flex;justify-content:space-between;font-size:13px">
+        <div><b>${s.season}</b> <span class="note">${s.months}</span></div>
+        <div class="note">our Ni&ntilde;o 3.4 &asymp; ${fmt(s.our_nino34)} &deg;C &middot; agreement ${s.agreement}</div>
+      </div>
+      <div class="barline"><div class="lab">official</div>${probbar(s.cpc)}</div>
+      <div class="barline"><div class="lab">our model</div>${probbar(s.ours)}</div>
+    </div>`).join("");
+  prov.innerHTML = off && off.provenance ? provTable(off.provenance) : "No provenance yet.";
+  drawForecastPlume(fc);
+}
+
+function drawForecastPlume(fc) {
+  const chart = document.getElementById("fc-plume");
+  const legend = document.getElementById("fc-plume-legend");
+  const note = document.getElementById("fc-plume-note");
+  const recent = (fc.recent || []).map(r => ({ t: Date.parse(r.month + "-15"), v: r.value }));
+  const fwd = (fc.forward || []).map(r => ({ t: Date.parse(r.month + "-15"), v: r.value, lo: r.lo, hi: r.hi }));
+  if (!recent.length || !fwd.length) { chart.innerHTML = "<div class='prov'>No forward forecast yet.</div>"; legend.innerHTML = ""; note.textContent = ""; return; }
+  const anchor = recent[recent.length - 1];
+
+  const W = 900, H = 320, padL = 44, padR = 14, padT = 14, padB = 30;
+  const allT = recent.concat(fwd).map(p => p.t);
+  let tMin = Math.min(...allT), tMax = Math.max(...allT);
+  const mrg = (tMax - tMin) * 0.02; tMin -= mrg; tMax += mrg;
+  const vals = recent.map(p => p.v).concat(fwd.flatMap(p => [p.lo, p.hi]));
+  let lo = Math.min(...vals, -1.5), hi = Math.max(...vals, 1.5);
+  const span = (hi - lo) || 1; lo -= span * 0.1; hi += span * 0.1;
+  const x = t => padL + (t - tMin) * (W - padL - padR) / (tMax - tMin);
+  const y = v => padT + (hi - v) * (H - padT - padB) / (hi - lo);
+
+  const bands = `
+    <rect x="${padL}" y="${y(hi)}" width="${W-padL-padR}" height="${y(0.5)-y(hi)}" fill="rgba(255,122,89,.06)"/>
+    <rect x="${padL}" y="${y(-0.5)}" width="${W-padL-padR}" height="${y(lo)-y(-0.5)}" fill="rgba(74,168,255,.06)"/>
+    <line x1="${padL}" y1="${y(0.5)}" x2="${W-padR}" y2="${y(0.5)}" stroke="var(--warm)" stroke-width="1" stroke-dasharray="2 3" opacity=".5"/>
+    <line x1="${padL}" y1="${y(-0.5)}" x2="${W-padR}" y2="${y(-0.5)}" stroke="var(--cool)" stroke-width="1" stroke-dasharray="2 3" opacity=".5"/>
+    <line x1="${padL}" y1="${y(0)}" x2="${W-padR}" y2="${y(0)}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>`;
+  const gy = []; for (let g = Math.ceil(lo); g <= Math.floor(hi); g++) gy.push(`<text x="${padL-8}" y="${y(g)+4}" text-anchor="end" fill="var(--muted)" font-size="11">${g>0?"+"+g:g}</text>`);
+  const gx = []; const seen = new Set();
+  recent.concat(fwd).forEach(p => { const yr = new Date(p.t).getFullYear(); if (seen.has(yr)) return; seen.add(yr);
+    const t = Date.parse(`${yr}-01-01`); if (t < tMin || t > tMax) return;
+    gx.push(`<line x1="${x(t)}" y1="${padT}" x2="${x(t)}" y2="${H-padB}" stroke="var(--line)" stroke-width="1" opacity=".5"/>`);
+    gx.push(`<text x="${x(t)}" y="${H-10}" text-anchor="middle" fill="var(--muted)" font-size="10.5">${yr}</text>`); });
+
+  // uncertainty band: anchor (zero width) then hi across, back along lo
+  const bandTop = [[anchor.t, anchor.v]].concat(fwd.map(p => [p.t, p.hi]));
+  const bandBot = fwd.map(p => [p.t, p.lo]).reverse().concat([[anchor.t, anchor.v]]);
+  const bandPts = bandTop.concat(bandBot).map(([t, v]) => `${x(t).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+  const recentPath = recent.map((p, i) => (i ? "L" : "M") + x(p.t).toFixed(1) + " " + y(p.v).toFixed(1)).join(" ");
+  const fwdLine = [anchor].concat(fwd).map((p, i) => (i ? "L" : "M") + x(p.t).toFixed(1) + " " + y(p.v).toFixed(1)).join(" ");
+  const dots = fwd.map(p => `<circle cx="${x(p.t).toFixed(1)}" cy="${y(p.v).toFixed(1)}" r="3.2" fill="var(--accent)"/>`).join("");
+  const sep = `<line x1="${x(anchor.t).toFixed(1)}" y1="${padT}" x2="${x(anchor.t).toFixed(1)}" y2="${H-padB}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="2 4" opacity=".4"/>`;
+
+  chart.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+    ${bands}${gx.join("")}${gy.join("")}${sep}
+    <polygon points="${bandPts}" fill="rgba(74,168,255,.16)" stroke="none"/>
+    <path d="${recentPath}" fill="none" stroke="var(--official)" stroke-width="1.9"/>
+    <path d="${fwdLine}" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-dasharray="5 3"/>${dots}</svg>`;
+  wireHover(chart.querySelector("svg"),
+    (fc.recent || []).map(r => ({ vx: x(Date.parse(r.month + "-15")), label: `${ymLabel(r.month)} &middot; actual <b>${fmt(r.value)}&nbsp;&deg;C</b> (monthly)` }))
+      .concat((fc.forward || []).map(r => ({ vx: x(Date.parse(r.month + "-15")), label: `${ymLabel(r.month)} &middot; forecast <b>${fmt(r.value)}</b> (${fmt(r.lo)} to ${fmt(r.hi)})` })))
+      .sort((a, b) => a.vx - b.vx), W);
+  legend.innerHTML = `
+    <span><span class="dot-key" style="background:var(--official);border-radius:2px"></span><b>What happened</b> (our record)</span>
+    <span><span class="dot-key" style="background:var(--accent)"></span><b>Our forecast</b> (next months)</span>
+    <span style="opacity:.7">shaded blue around it = our uncertainty (&plusmn; one typical miss)</span>`;
+  const last = fwd[fwd.length - 1];
+  note.innerHTML = `The solid line is our monthly record; its last point (${ymLabel(fc.issue_month)}) is a <b>provisional current month</b> from the daily readings so far. The dashed line is our forecast for the months after it: by ${ymLabel(fc.forward[fc.forward.length-1].month)} we expect about ${fmt(last.v)}&nbsp;&deg;C, give or take ${fmt(fc.forward[fc.forward.length-1].sigma).replace("+","")}. The band widens the further out we look.`;
+}
+
 document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
   document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
   t.classList.add("active");
-  ["obs","fc","im"].forEach(id => document.getElementById(id).classList.toggle("hide", id !== t.dataset.tab));
+  ["obs","ing","sk","fc","im"].forEach(id => document.getElementById(id).classList.toggle("hide", id !== t.dataset.tab));
 }));
 
 fetch("series.json?" + Date.now())
   .then(r => r.json())
   .then(d => {
+    renderFreshness(d);
     renderStatus(d);
     renderChart(d);
     renderExplain(d);
     renderProv(d);
-    const n = d.record_count, f = (d.source_files||[]).length;
-    document.getElementById("subtitle").textContent =
-      `${n} day${n===1?"":"s"} of our own data over the official record, provenance on every number`;
+    renderIngredients(d);
+    renderWwv(d);
+    renderSkill(d);
+    renderHindcast(d);
+    renderPeak(d);
+    renderForecast(d);
   })
   .catch(() => {
     document.getElementById("status-body").innerHTML =

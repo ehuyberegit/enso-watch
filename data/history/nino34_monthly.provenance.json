@@ -1,0 +1,14 @@
+{
+  "product": "Nino 3.4 monthly anomaly history (computed by enso-watch)",
+  "source_name": "NOAA PSL OISST v2.1 monthly mean",
+  "dataset": "sst.mon.mean.nc via OPeNDAP",
+  "retrieval_url": "https://psl.noaa.gov/thredds/dodsC/Datasets/noaa.oisst.v2.highres/sst.mon.mean.nc",
+  "baseline": "1991-2020",
+  "method": "Nino 3.4 box (5N to 5S, 170W to 120W = lon 190 to 240 east), cosine of latitude weighted area average, minus the frozen 1991 to 2020 monthly box climatology. Same box and baseline as the live daily oracle, at the monthly cadence the forecast uses.",
+  "span": [
+    "1981-09",
+    "2026-07"
+  ],
+  "month_count": 539,
+  "pulled_at_utc": "2026-08-13T14:07:18Z"
+}

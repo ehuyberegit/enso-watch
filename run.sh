@@ -16,5 +16,7 @@ case "$cmd" in
   pull)  exec "$PY" -m enso_watch.pull ;;
   smoke) exec "$PY" -m enso_watch.smoke ;;
   serve) exec "$PY" -m enso_watch.dashboard ;;
-  *) echo "usage: ./run.sh [test|emit|pull|smoke|serve]" >&2; exit 2 ;;
+  baselines) exec "$PY" tools/run_baselines.py ;;
+  forecast) exec "$PY" tools/ingest_cpc_forecast.py ;;
+  *) echo "usage: ./run.sh [test|emit|pull|smoke|serve|baselines|forecast]" >&2; exit 2 ;;
 esac

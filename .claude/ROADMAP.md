@@ -3,7 +3,53 @@
 > Operational source of truth. At the top: the current work's run contract.
 > Rule: "Done" = integrated, green (machine gate), reviewed.
 
-## 🚦 Run contract, current work (V0, the observation oracle)
+## 🚦 Run contract, current work (V1, the forecast oracle, Projet A)
+
+> Decision 2026-08-13, frozen: V1 builds OUR OWN simple statistical forecast of the
+> Nino 3.4 ocean signal at a 1 to 3 month lead, whose target is to resemble the official
+> IRI plume. The earlier "aggregate the official, make no prediction of our own" framing
+> is retired. Projet B (land impact) stays a separate, harder, later track: ENSO shifts
+> regional probabilities, it does not decide local weather. The honest spine, and the
+> reason we built observation and provenance first: a model is only as good as its data
+> and its leakage free validation, so the data and the validation harness come before any
+> model.
+
+### 1. Frozen decisions (V1)
+
+| Axis | Decision |
+| --- | --- |
+| Ambition | Predict the Nino 3.4 anomaly at a 1 to 3 month lead. Our own model. Target: resemble the official plume, not out forecast NOAA. |
+| Honesty | Uncertainty is first class: every forecast carries its spread, never a naked point. No skill is claimed that is not shown against the baselines. |
+| Predictors | Persistence (the baseline to beat), warm water volume (the precursor king, leads ~2 seasons, NOAA PMEL), zonal winds / SOI, seasonality. |
+| Method ladder | Baselines (persistence, climatology) then linear then ridge regression, then LIM. The Ham 2019 CNN is cited as an honest ceiling, not a target (it needed CMIP5 sims for enough data). |
+| Validation | Walk forward (expanding window), scored by ACC and RMSE against the baselines, per lead month, exposing the spring predictability barrier. No future leakage, ever (a leakage guard is a test). |
+| Data source | Our own Nino 3.4 history, computed on the SAME box and 1991-2020 climatology as V0. The model trains at MONTHLY cadence from the PSL OISST v2.1 monthly mean (sst.mon.mean.nc, the whole record in one light OPeNDAP pull); the daily transform is kept for the live oracle and for any fine grained window. Daily proved too heavy to backfill in bulk (~112 s per year over OPeNDAP), and Nino 3.4 is a monthly index, so monthly is both faster and the right cadence. WWV from NOAA PMEL. |
+| Stack | numpy, pandas, xarray, scikit-learn, matplotlib. Tested modules under src/, NOT a notebook as the product (a notebook only to explore). Adding a dependency stays a decision. |
+| Experiment log | `data/experiments.jsonl`, committed, one line per run (git native, not MLflow). |
+| Comparison target | The official IRI/CPC plume probabilities. Find the machine readable door (for example the CPC probability table) before claiming resemblance. |
+
+### 2. Finish criteria (V1, the GO threshold, machine verifiable)
+
+| # | Criterion | Verdict |
+| --- | --- | --- |
+| 1 | The training dataset is committed: our own Nino 3.4 daily anomaly history (own transform) plus the WWV predictor, each traceable to its source, with a frozen fixture and an offline deterministic test. | Hard gate: fixture in, expected values out to 3 decimals, offline. |
+| 2 | A walk forward harness scores any model by ACC and RMSE against the persistence and climatology baselines, per lead, with no future leakage. | Hard gate: a leakage guard test is green. |
+| 3 | The forecast product carries its full spread, never a naked point. | Hard gate (structural) on a fixture. |
+| 4 | Every model run is recorded in the experiment log. | Structural. |
+| 5 | The official plume comparison target is ingested (machine readable), so "resembles the plume" is measurable. | Live report plus one read. |
+| 6 | Docs do not lie (Trinity plus one read). | Mixed. |
+
+### 3. Build sequence (V1)
+
+1. **Backfill the training dataset** (the current front): our own Nino 3.4 daily anomaly history from PSL daily means via OPeNDAP box subset, plus the WWV predictor. Frozen fixture, offline test.
+2. Baselines (persistence, climatology) plus the walk forward harness plus the experiment log. The thing every model must beat.
+3. Linear then ridge regression on the predictors, scored against the baselines, per lead.
+4. Find the machine readable plume door, score resemblance.
+5. (Stretch) LIM. The browser lab grows to five tabs: Observation (live), Ingredients, Atelier, Skill bulletin, Forecast.
+
+---
+
+## Run contract, V0 (shipped 2026-08-13, kept for the record)
 
 > The spirit (Astrolab the company, not the take home): pragmatism over pilot theatre,
 > a working system that ships real data, honesty about scope. So V0 is not a demo: it is
@@ -65,7 +111,63 @@ Two products in V0, each record carrying its provenance block.
 
 ## 🔥 In progress
 
-_(Nothing. V0 is shipped and its automation is live and proven. Next frontier under design: a private read only UI over the JSON, tabbed for observation, forecast, and impact. See "Later".)_
+**Front: the training dataset (V1 build step 1).** Opened 2026-08-13.
+
+DONE, the Nino 3.4 history:
+- `data/history/nino34_monthly.csv` built: 539 months (1981-09 to 2026-07), our own anomaly, region mean, climatology mean, baseline, one consistent source (PSL OISST monthly mean), with a provenance sidecar. Latest 2026-07 at +2.090 C.
+- Offline deterministic gate: `history.monthly_series` and `history.daily_series` each pinned to golden values on a frozen fixture (the 2023-24 monthly slice finds the real Dec 2023 El Nino peak at +2.011 C; the Jan 2024 daily slice at +2.123 C). `./run.sh test` green (50 tests).
+- The dashboard grew an Ingredients tab: the 46 year record charted with the El Nino / La Nina bands, our own numbers, provenance shown. Verified in the browser.
+
+DONE, the warm water volume (the precursor):
+- `data/history/wwv_monthly.csv` ingested from NOAA PMEL: 558 months (1980-01 to 2026-06), volume and anomaly in 1e14 m^3, with a provenance sidecar. Latest anomaly 2026-06 at +3.004.
+- Offline gate: `wwv.parse_wwv` pinned to golden values on a frozen 1997-98 slice (it finds the precursor peak in spring 1997, ahead of the late-1997 El Nino). `./run.sh test` green (56 tests).
+- Surfaced in the Ingredients tab as a second chart under the Nino 3.4 history, with the two season lead noted.
+
+DONE, the review:
+- Adversarial reviewer pass: PASS. One medium finding (the 4 new fixtures were not in fixtures/MANIFEST.json, breaking the sha256 provenance convention). Fixed: a shared tools/manifest.py records source, timestamp, byte size, and sha256; all four capture tools now self-record; the manifest carries all 8 fixtures. Gate still green (56 tests).
+
+Front complete (pending the closure commit).
+
+**Front: baselines and the validation harness (V1 build step 2). DONE 2026-08-13.**
+- `src/enso_watch/skill.py`: persistence and climatology baselines, a leakage free walk forward (the forecaster only ever sees history up to the issue month), and the two ENSO scores (RMSE in C, ACC the anomaly correlation). `src/enso_watch/experiments.py`: a git native JSONL run log.
+- `tools/run_baselines.py` (`./run.sh baselines`) scores the baselines over our 539 month history and appends to `data/experiments.jsonl`.
+- Real result: persistence ACC 0.942 at lead 1 decaying to 0.332 at lead 6, and by 6 months its RMSE (0.967) is worse than climatology (0.837), the honest crossover a model must beat. Climatology ACC is 0 (no skill) by construction.
+- Offline gate: the leakage guard is a hard test (an index series forces a constant lead-length error, impossible if the future leaks). `./run.sh test` green (69 tests).
+- The dashboard grew a Skill tab: the walk forward process drawn, the baseline scoreboard by lead, and the experiment log. Verified in the browser.
+
+**Front: our own model (V1 build step 3). DONE 2026-08-13.**
+- `src/enso_watch/model.py`: a ridge regression solved in closed form with numpy (no scikit-learn added), reading three predictors at the issue month (current Nino 3.4, warm water volume, and the season as sine and cosine of the month) to predict the anomaly a lead ahead. Standardized features, unregularized intercept.
+- Scored by the SAME leakage free walk forward and the SAME RMSE/ACC as the baselines, on the same window. Leakage guard is a hard test (truncating every row after a target leaves the earlier forecast unchanged).
+- Real result: the model beats persistence at every lead, and pulls away at long range where it matters: at 6 months ACC 0.509 vs persistence 0.332 (RMSE 0.72 vs 0.97). Its learned weights tell the story: at 6 months the warm water volume (0.413) outweighs today's temperature (0.271), the precursor carrying the signal.
+- `./run.sh baselines` now prints and logs baselines plus the model; the Skill tab shows the model column (winning, highlighted) and a "what the model leans on" readout. `./run.sh test` green (77 tests).
+- The whole lab UI was reworked for accessibility (plain-language lead-ins and a glossary per tab, an "experts vs us" panel), on operator feedback.
+
+**Front: the official comparison (V1 build step 4, choice A "live snapshot"). DONE 2026-08-13.**
+- Machine readable door found and verified live: the IRI numeric plume is retired ("we are no longer providing forecast data"), so the official target is the CPC ENSO probability table (phase chances per 3 month season). CPC defines the phases exactly as we do (+/-0.5 C, Nino 3.4, 1991-2020), so the comparison is apples to apples.
+- `src/enso_watch/official_forecast.py` parses that table; `tools/ingest_cpc_forecast.py` (`./run.sh forecast`) writes `data/forecast/cpc_official.json` with provenance; a frozen fixture (`fixtures/cpc/roni_probabilities.html`, in the manifest) proves the parser offline.
+- `model.py` gained the forward forecast (`forecast_forward`, train on all data, predict the next months), the honest bridge to probabilities (`phase_probs`, our forecast mean plus our measured spread as a Gaussian over the +/-0.5 thresholds), and `compare_to_official`.
+- Real result: our simple model agrees with NOAA's official forecast at **98%** and calls the **same phase 4 of 4** near-term seasons. Where it differs, it hedges toward Neutral a little sooner (our wider, honest uncertainty). Our forward: a strong El Nino weakening slowly (+1.8 C now toward +1.3 C by December).
+- The Forecast tab now shows the two side by side with the agreement number, season by season bars, and provenance. `./run.sh test` green (89 tests). Verified in the browser.
+
+**Front: our forward forecast curve (V1 build step 4B). DONE 2026-08-13.**
+- `compare_to_official` now also returns the forward series: our Nino 3.4 forecast for each of the next 6 months, each with its uncertainty (value plus or minus our measured miss at that lead). The dashboard attaches the recent actual tail for context.
+- The Forecast tab draws it: the real record (solid) continued by our forecast (dashed) with a shaded uncertainty band that widens with lead, over the El Nino / La Nina threshold bands. Our forecast: a strong El Nino easing from about +1.8 C now to +1.3 C (give or take 0.7) by December. `./run.sh test` green (89 tests). Verified.
+
+**Front: the peak forecast (timing and magnitude, with uncertainty). DONE 2026-08-13.**
+Operator reframe: a fixed lead forecast is academic; what matters for impact is WHEN the event peaks and HOW HIGH. Built on two honest legs:
+- Timing: El Nino events phase lock to the calendar. Strong ones peak November to January, so the timing is read from the empirical distribution of past strong peaks (6 events), not a fragile model. Weak El Ninos peak off season, which is why the timing conditions on strength.
+- Magnitude: a plain linear fit of the eventual peak on the current Nino 3.4 and warm water volume, validated leave one year out so the band is a real out of sample miss.
+- `src/enso_watch/peak.py`, tested (`tests/test_peak.py`, including a leave one out that must be positive on data a line cannot fit). The Forecast tab leads with it.
+- Real result: this El Nino is projected to peak around December 2026 at about +3.19 C monthly mean (band +2.66 to +3.72), which would top even 2015. Nearest analogs, found from today's ocean state: 1997, 2023, 1982. `./run.sh test` green (94 tests).
+- Correction after operator review: the peak is a MONTHLY mean (a single hot day, like the +2.69 in Observation, always sits above its month), and it is now issued from the freshest Nino 3.4 month (July), not the last month the warm water volume also covers (June). Issuing from June under read the surge (gave +2.72); July gives +3.19. The Forecast panel now states the monthly vs daily difference in plain words so the two numbers are not confused.
+
+**Front: coherence and readability pass. DONE 2026-08-13.**
+- Consistency fix: both the forward forecast and the peak now issue from the freshest Nino 3.4 month (July), not the last month the warm water volume also covers (June). The forecast plume's real line now extends through the latest month, so the model's under-shoot is visible, not hidden. The plume panel is relabelled the cautious month-ahead baseline (it leans to normal), pointing to the peak panel for the event's high point.
+- A Data freshness strip leads the Observation tab: daily to its date and pull time (UTC), monthly, warm water volume, and official forecast, each with its own date, since they refresh at different rates. It states the daily vs monthly "two rulers" point in plain words.
+- Hover tooltips on every chart (Observation, both Ingredients charts, the hindcast, the forecast plume) show the exact date and value under the cursor, with a vertical guide.
+- `./run.sh test` green (94 tests), no console errors, Trinity clean.
+
+The forecast oracle (V1) stands end to end: observation, ingredients, an honest judge, a model that beats the baselines, a forward forecast that agrees with NOAA at 99%, and a peak forecast (timing and magnitude with uncertainty). Parked for next time: a daily view of the current state, the historical skill comparison, and the impact track (the peak now feeds it). Nothing is committed yet.
 
 ## ✅ Done
 
@@ -82,9 +184,7 @@ _(Nothing. V0 is shipped and its automation is live and proven. Next frontier un
 
 ## 🧊 Later
 
-**V1, the forecast oracle.** Ingest the IRI/CPC ENSO plume (probabilistic Nino 3.4, 26 models, 9 months ahead). Uncertainty is first class: the output carries the full spread (min, median, max) and the per phase probabilities, never a single naked number. Known blocker to solve first: the IRI plume has no clean downloadable file (visualization only), so V1 must find the machine readable door (for example the CPC probability table) before building.
-
-**V1 design program (done 2026-08-13, in memory + two artifacts).** A full research backed plan was produced this session, split honestly into Projet A (predict the Nino 3.4 ocean signal at 1 to 3 months, our own simple statistical model whose target is to resemble the official plume) and Projet B (land impact, a separate harder later track). Predictors ranked from the literature: persistence, warm water volume (the precursor king, NOAA PMEL), winds and SOI, seasonality. Method ladder: baselines (persistence, climatology) then multivariate linear or ridge regression, LIM, up to the Ham 2019 CNN as a ceiling. Validation is walk forward, scored by ACC and RMSE against the baselines, exposing the spring barrier. Stack: numpy, pandas, xarray, scikit-learn (no notebook as the product, tested modules under src/ instead). An experiment log (data/experiments.jsonl, committed, one line per run) tracks what worked. First concrete build step: backfill our own Nino 3.4 history and ingest the warm water volume. The browser lab grows to five tabs: Observation (live), Ingredients, Atelier, Skill bulletin (with the experiment history), Forecast. Two private artifacts hold the plan (a simple README and a technical edition with code and maths).
+**V1, the forecast oracle.** Promoted to the current run contract at the top of this file (decision 2026-08-13: our own model, not aggregation). The two private artifacts that hold the full design plan (a simple README and a technical edition with code and maths) stay the reference for the maths and the five screen lab.
 
 **Impact, a separate track.** Deferred by decision. "Impact" is scoped on its own, after observation and forecast are alive, never bolted onto V0 or V1.
 

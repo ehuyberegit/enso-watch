@@ -1,0 +1,75 @@
+{
+  "issued": "August 2026",
+  "seasons": [
+    {
+      "season": "JAS",
+      "months": "Jul Aug Sep",
+      "p_la_nina": 0,
+      "p_neutral": 0,
+      "p_el_nino": 100
+    },
+    {
+      "season": "ASO",
+      "months": "Aug Sep Oct",
+      "p_la_nina": 0,
+      "p_neutral": 0,
+      "p_el_nino": 100
+    },
+    {
+      "season": "SON",
+      "months": "Sep Oct Nov",
+      "p_la_nina": 0,
+      "p_neutral": 0,
+      "p_el_nino": 100
+    },
+    {
+      "season": "OND",
+      "months": "Oct Nov Dec",
+      "p_la_nina": 0,
+      "p_neutral": 0,
+      "p_el_nino": 100
+    },
+    {
+      "season": "NDJ",
+      "months": "Nov Dec Jan",
+      "p_la_nina": 0,
+      "p_neutral": 0,
+      "p_el_nino": 100
+    },
+    {
+      "season": "DJF",
+      "months": "Dec Jan Feb",
+      "p_la_nina": 0,
+      "p_neutral": 0,
+      "p_el_nino": 100
+    },
+    {
+      "season": "JFM",
+      "months": "Jan Feb Mar",
+      "p_la_nina": 0,
+      "p_neutral": 0,
+      "p_el_nino": 100
+    },
+    {
+      "season": "FMA",
+      "months": "Feb Mar Apr",
+      "p_la_nina": 0,
+      "p_neutral": 3,
+      "p_el_nino": 97
+    },
+    {
+      "season": "MAM",
+      "months": "Mar Apr May",
+      "p_la_nina": 0,
+      "p_neutral": 18,
+      "p_el_nino": 82
+    }
+  ],
+  "provenance": {
+    "source": "NOAA CPC official ENSO probabilities",
+    "retrieval_url": "https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/probabilities/",
+    "pull_timestamp": "2026-08-13T15:39:40Z",
+    "phase_definition": "El Nino > +0.5 C, La Nina < -0.5 C, Nino 3.4, 1991-2020 base (RONI)",
+    "note": "Phase probabilities per overlapping 3 month season. IRI stopped publishing the numeric plume, so this is the machine readable official forecast."
+  }
+}

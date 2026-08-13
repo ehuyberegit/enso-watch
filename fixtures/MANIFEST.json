@@ -1,14 +1,6 @@
 {
   "fixtures": [
     {
-      "name": "oisst_daily",
-      "source_url": "https://www.ncei.noaa.gov/data/sea-surface-temperature-optimum-interpolation/v2.1/access/avhrr/202607/oisst-avhrr-v02r01.20260701.nc",
-      "local_path": "fixtures/oisst/oisst-avhrr-v02r01.20260701.nc",
-      "retrieved_at_utc": "2026-08-11T17:27:50Z",
-      "content_bytes": 1543522,
-      "sha256": "51219cd832b68635ccb455dead284c79ddd05d006b0ca72c6894c3af1564ea9d"
-    },
-    {
       "name": "cpc_nino34_control",
       "source_url": "https://www.cpc.ncep.noaa.gov/data/indices/ersst5.nino.mth.91-20.ascii",
       "local_path": "fixtures/cpc/ersst5.nino.mth.91-20.ascii",
@@ -25,6 +17,15 @@
       "sha256": "d1827d2687ff7262756af3b1d88feb2af59478096956dc741000d94dc54f937f"
     },
     {
+      "name": "cpc_enso_probabilities",
+      "source_url": "https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/probabilities/",
+      "local_path": "fixtures/cpc/roni_probabilities.html",
+      "retrieved_at_utc": "2026-08-13T15:39:39Z",
+      "content_bytes": 28223,
+      "sha256": "c63313dc47c755b4bb773791b84b39bfc3e9d827994d5d2b87e380fdafe8795a",
+      "note": "The official CPC ENSO phase probability forecast page, fixture for the official_forecast parser, built by tools/capture_cpc_forecast.py."
+    },
+    {
       "name": "oisst_nino34_climatology_1991_2020",
       "source_url": "https://psl.noaa.gov/thredds/dodsC/Datasets/noaa.oisst.v2.highres/sst.day.mean.ltm.1991-2020.nc",
       "local_path": "fixtures/oisst/nino34_climatology_1991-2020.nc",
@@ -32,6 +33,50 @@
       "content_bytes": 6335987,
       "sha256": "258685866e040b00ad9b08f05446950ad668fc2bd3ae695157aa893c06d96ef4",
       "note": "Box subset (Nino 3.4) of the official PSL 1991-2020 daily climatology, built via OPeNDAP by tools/capture_climatology.py."
+    },
+    {
+      "name": "oisst_nino34_daily_sample_2024_01",
+      "source_url": "https://psl.noaa.gov/thredds/dodsC/Datasets/noaa.oisst.v2.highres/sst.day.mean.2024.nc",
+      "local_path": "fixtures/oisst/nino34_daily_sample_2024-01.nc",
+      "retrieved_at_utc": "2026-08-13T14:56:35Z",
+      "content_bytes": 326833,
+      "sha256": "2b2195effc90d19465b48ab01276403b8da1540655e2b6f7beaa95bd9a82977d",
+      "note": "Box subset (Nino 3.4) of one month of the PSL OISST daily mean, fixture for the daily history transform, built by tools/capture_daily_sample.py."
+    },
+    {
+      "name": "oisst_nino34_monthly_climatology_1991_2020",
+      "source_url": "https://psl.noaa.gov/thredds/dodsC/Datasets/noaa.oisst.v2.highres/sst.mon.ltm.1991-2020.nc",
+      "local_path": "fixtures/oisst/nino34_monthly_climatology_1991-2020.nc",
+      "retrieved_at_utc": "2026-08-13T14:56:41Z",
+      "content_bytes": 218621,
+      "sha256": "07230ca19e0b8508aa269aeefad28621faa2f641a2fdff730c1810c9ab31c7e7",
+      "note": "Box subset (Nino 3.4) of the PSL OISST 1991-2020 monthly long term mean, the monthly baseline, built by tools/capture_monthly_climatology.py."
+    },
+    {
+      "name": "oisst_nino34_monthly_sample_2023_2024",
+      "source_url": "https://psl.noaa.gov/thredds/dodsC/Datasets/noaa.oisst.v2.highres/sst.mon.mean.nc",
+      "local_path": "fixtures/oisst/nino34_monthly_sample_2023-2024.nc",
+      "retrieved_at_utc": "2026-08-13T14:56:44Z",
+      "content_bytes": 433152,
+      "sha256": "b5a6524f1c44dc8122e0fa59a86c1585c2f4e137bd152ff3e106942f71e684a1",
+      "note": "Box subset (Nino 3.4) of two years of the PSL OISST monthly mean, fixture for the monthly history transform, built by tools/capture_monthly_sample.py."
+    },
+    {
+      "name": "oisst_daily",
+      "source_url": "https://www.ncei.noaa.gov/data/sea-surface-temperature-optimum-interpolation/v2.1/access/avhrr/202607/oisst-avhrr-v02r01.20260701.nc",
+      "local_path": "fixtures/oisst/oisst-avhrr-v02r01.20260701.nc",
+      "retrieved_at_utc": "2026-08-11T17:27:50Z",
+      "content_bytes": 1543522,
+      "sha256": "51219cd832b68635ccb455dead284c79ddd05d006b0ca72c6894c3af1564ea9d"
+    },
+    {
+      "name": "pmel_wwv_sample_1997_1998",
+      "source_url": "https://www.pmel.noaa.gov/tao/wwv/data/wwv.dat",
+      "local_path": "fixtures/pmel/wwv_sample.dat",
+      "retrieved_at_utc": "2026-08-13T14:56:44Z",
+      "content_bytes": 1013,
+      "sha256": "84989c351ac069666fb0e8c301e06b8629891ba7149b2be01ffc0dcda18e2c07",
+      "note": "Header plus the 1997-98 rows of the NOAA PMEL warm water volume file, fixture for the WWV parser, built by tools/capture_wwv_sample.py."
     }
   ],
   "captured_note": "Frozen real source responses for the offline deterministic test gate. Do not edit."
