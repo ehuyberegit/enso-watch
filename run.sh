@@ -15,5 +15,6 @@ case "$cmd" in
   emit)  exec "$PY" -m enso_watch.cli ;;
   pull)  exec "$PY" -m enso_watch.pull ;;
   smoke) exec "$PY" -m enso_watch.smoke ;;
-  *) echo "usage: ./run.sh [test|emit|pull|smoke]" >&2; exit 2 ;;
+  serve) exec "$PY" -m enso_watch.dashboard ;;
+  *) echo "usage: ./run.sh [test|emit|pull|smoke|serve]" >&2; exit 2 ;;
 esac

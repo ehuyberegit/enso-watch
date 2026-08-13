@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>enso-watch</title>
+<style>
+  :root {
+    --bg: #0f1720; --panel: #16212e; --line: #223142; --ink: #e7eef5;
+    --muted: #8ea3b7; --accent: #4aa8ff;
+    --warm: #ff7a59; --cool: #4aa8ff; --neutral: #9aa7b4; --official: #d7b26a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  header { padding: 22px 26px 0; max-width: 980px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0; font-weight: 650; letter-spacing: .2px; }
+  .sub { color: var(--muted); font-size: 13px; margin-top: 3px; }
+  .tabs { display: flex; gap: 4px; margin: 20px 0 0; border-bottom: 1px solid var(--line); }
+  .tab {
+    padding: 10px 16px; cursor: pointer; color: var(--muted); font-weight: 550;
+    border-bottom: 2px solid transparent; margin-bottom: -1px; user-select: none;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab.active { color: var(--ink); border-bottom-color: var(--accent); }
+  main { max-width: 980px; margin: 0 auto; padding: 24px 26px 60px; }
+  .panel {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px; margin-bottom: 18px;
+  }
+  .row { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; }
+  .stat { flex: 1 1 150px; }
+  .stat .k { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+  .stat .v { font-size: 24px; font-weight: 680; margin-top: 4px; }
+  .stat .v small { font-size: 13px; font-weight: 500; color: var(--muted); }
+  .dot-key { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+  .pill {
+    display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px;
+    font-weight: 650; letter-spacing: .3px;
+  }
+  .pill.el_nino { background: rgba(255,122,89,.16); color: var(--warm); }
+  .pill.la_nina { background: rgba(74,168,255,.16); color: var(--cool); }
+  .pill.neutral { background: rgba(154,167,180,.16); color: var(--neutral); }
+  .badge {
+    font-size: 11px; padding: 2px 7px; border-radius: 5px; font-weight: 600;
+    background: rgba(255,255,255,.06); color: var(--muted); border: 1px solid var(--line);
+  }
+  .chart-wrap { overflow-x: auto; }
+  svg { display: block; }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+  .legend b { color: var(--ink); font-weight: 600; }
+  .prov { font-size: 12px; color: var(--muted); }
+  .prov code { color: var(--ink); font-size: 11.5px; word-break: break-all; }
+  .prov table { border-collapse: collapse; width: 100%; margin-top: 6px; }
+  .prov td { padding: 4px 10px 4px 0; vertical-align: top; }
+  .prov td:first-child { color: var(--muted); white-space: nowrap; width: 1%; }
+  h2 { font-size: 15px; margin: 0 0 14px; font-weight: 620; }
+  .explain p { margin: 0 0 12px; color: #c2d0dd; font-size: 14px; }
+  .explain p:last-child { margin-bottom: 0; }
+  .explain b { color: var(--ink); }
+  .note { color: var(--muted); font-size: 12px; margin-top: 10px; }
+  .empty { text-align: center; padding: 48px 20px; color: var(--muted); }
+  .empty .big { font-size: 15px; color: var(--ink); font-weight: 600; margin-bottom: 6px; }
+  .empty ul { text-align: left; max-width: 620px; margin: 16px auto 0; padding-left: 20px; }
+  .empty li { margin-bottom: 8px; }
+  .hide { display: none; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>enso&#8202;watch</h1>
+  <div class="sub" id="subtitle">the live ENSO signal, computed from NOAA, provenance on every number</div>
+  <div class="tabs">
+    <div class="tab active" data-tab="obs">Observation</div>
+    <div class="tab" data-tab="fc">Forecast</div>
+    <div class="tab" data-tab="im">Impact</div>
+  </div>
+</header>
+
+<main>
+  <!-- TAB 1: OBSERVATION -->
+  <section id="obs">
+    <div class="panel"><h2>Where ENSO is now</h2><div id="status-body" class="row"></div></div>
+    <div class="panel">
+      <h2>Our daily value against the official record</h2>
+      <div class="chart-wrap"><div id="chart"></div></div>
+      <div class="legend" id="legend"></div>
+      <div class="note" id="chart-note"></div>
+    </div>
+    <div class="panel explain">
+      <h2>How this number is computed, and why it differs from the official one</h2>
+      <div id="explain-body"></div>
+    </div>
+    <div class="panel prov"><h2>Provenance</h2><div id="prov-body"></div></div>
+  </section>
+
+  <!-- TAB 2: FORECAST -->
+  <section id="fc" class="hide">
+    <div class="panel empty">
+      <div class="big">Forecast oracle not built yet (V1)</div>
+      Where ENSO heads next. When built, this tab will carry, uncertainty first:
+      <ul>
+        <li><b>Per phase probabilities</b> for each of the next seasons: e.g. "Q4 2026: 60% El Nino, 35% neutral, 5% La Nina".</li>
+        <li><b>The full model spread</b>, not one number: the plume of ~26 models (min, median, max predicted Nino 3.4), so the uncertainty is on screen.</li>
+        <li><b>The forecast against what actually happened</b>: past forecasts overlaid on the realised value, so you can see how much to trust the plume.</li>
+        <li><b>Issue date and lead time</b>: a forecast is only honest with its age and how far ahead it looks.</li>
+        <li><b>The El Nino / La Nina thresholds</b>, so you see when the plume crosses into a phase.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- TAB 3: IMPACT -->
+  <section id="im" class="hide">
+    <div class="panel empty">
+      <div class="big">Impact oracle not built yet (later track)</div>
+      Who the signal hits. A separate track, scoped on its own once observation and forecast are
+      alive. Each country alert will carry its own source, same truth first rule as the rest.
+    </div>
+  </section>
+</main>
+
+<script>
+const PHASE_LABEL = { el_nino: "El Nino", la_nina: "La Nina", neutral: "Neutral" };
+const MONTHS = ["", "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function fmt(n, d = 2) { return (n >= 0 ? "+" : "") + Number(n).toFixed(d); }
+
+function renderStatus(d) {
+  const s = d.status;
+  const body = document.getElementById("status-body");
+  if (!s) { body.innerHTML = "<div class='prov'>No status record yet.</div>"; return; }
+  const daily = (d.daily_series || [])[d.daily_series.length - 1];
+  const om = (d.official?.monthly_nino34?.series || []);
+  const lastOm = om[om.length - 1];
+  const phase = s.phase || "neutral";
+  body.innerHTML = `
+    <div class="stat">
+      <div class="k">Phase now</div>
+      <div class="v"><span class="pill ${phase}">${PHASE_LABEL[phase] || phase} &middot; ${s.strength || "?"}</span></div>
+    </div>
+    <div class="stat">
+      <div class="k"><span class="dot-key" style="background:var(--accent)"></span>Our latest daily</div>
+      <div class="v">${daily ? fmt(daily.nino34_anomaly_c) : "?"} <small>&deg;C &middot; ${daily ? daily.date : ""}</small></div>
+    </div>
+    <div class="stat">
+      <div class="k"><span class="dot-key" style="background:var(--official)"></span>Official monthly Nino 3.4</div>
+      <div class="v">${lastOm ? fmt(lastOm.anomaly_c) : "?"} <small>&deg;C &middot; ${lastOm ? MONTHS[lastOm.month] + " " + lastOm.year : ""}</small></div>
+    </div>
+    <div class="stat">
+      <div class="k">Official ONI (3&#8209;month mean)</div>
+      <div class="v">${fmt(s.oni_latest)} <small>&deg;C &middot; ${s.oni_season || ""}</small></div>
+    </div>`;
+}
+
+function renderChart(d) {
+  const el = document.getElementById("chart");
+  const legend = document.getElementById("legend");
+  const note = document.getElementById("chart-note");
+  const daily = (d.daily_series || []).map(r => ({ t: Date.parse(r.date), v: r.nino34_anomaly_c, date: r.date, status: r.provenance?.status }));
+  const monthly = (d.official?.monthly_nino34?.series || []).map(r => ({ t: Date.parse(`${r.year}-${String(r.month).padStart(2,"0")}-15`), v: r.anomaly_c, year: r.year, month: r.month }));
+
+  if (!daily.length && !monthly.length) { el.innerHTML = "<div class='prov'>No data yet.</div>"; return; }
+
+  const all = daily.concat(monthly);
+  const W = 900, H = 340, padL = 44, padR = 14, padT = 14, padB = 30;
+  let tMin = Math.min(...all.map(p => p.t)), tMax = Math.max(...all.map(p => p.t));
+  if (tMin === tMax) { tMin -= 2.6e9; tMax += 2.6e9; }
+  else { const m = (tMax - tMin) * 0.03; tMin -= m; tMax += m; }  // breathing room, so edge points are not clipped
+  const vals = all.map(p => p.v);
+  let lo = Math.min(...vals, -0.8), hi = Math.max(...vals, 0.8);
+  const span = (hi - lo) || 1; lo -= span * 0.1; hi += span * 0.1;
+  const x = t => padL + (t - tMin) * (W - padL - padR) / (tMax - tMin);
+  const y = v => padT + (hi - v) * (H - padT - padB) / (hi - lo);
+
+  // El Nino / La Nina threshold bands (+/- 0.5) and the zero line.
+  const bands = `
+    <rect x="${padL}" y="${y(hi)}" width="${W-padL-padR}" height="${y(0.5)-y(hi)}" fill="rgba(255,122,89,.06)"/>
+    <rect x="${padL}" y="${y(-0.5)}" width="${W-padL-padR}" height="${y(lo)-y(-0.5)}" fill="rgba(74,168,255,.06)"/>
+    <line x1="${padL}" y1="${y(0.5)}" x2="${W-padR}" y2="${y(0.5)}" stroke="var(--warm)" stroke-width="1" stroke-dasharray="2 3" opacity=".5"/>
+    <line x1="${padL}" y1="${y(-0.5)}" x2="${W-padR}" y2="${y(-0.5)}" stroke="var(--cool)" stroke-width="1" stroke-dasharray="2 3" opacity=".5"/>
+    <line x1="${padL}" y1="${y(0)}" x2="${W-padR}" y2="${y(0)}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>`;
+
+  // Y gridline labels.
+  const gy = [];
+  for (let g = Math.ceil(lo); g <= Math.floor(hi); g++) {
+    gy.push(`<text x="${padL-8}" y="${y(g)+4}" text-anchor="end" fill="var(--muted)" font-size="11">${g>0?"+"+g:g}</text>`);
+  }
+  // X year ticks (January of each year in range).
+  const gx = [];
+  const y0 = new Date(tMin).getFullYear(), y1 = new Date(tMax).getFullYear();
+  for (let yr = y0; yr <= y1; yr++) {
+    const t = Date.parse(`${yr}-01-01`);
+    if (t < tMin || t > tMax) continue;
+    gx.push(`<line x1="${x(t)}" y1="${padT}" x2="${x(t)}" y2="${H-padB}" stroke="var(--line)" stroke-width="1" opacity=".5"/>`);
+    gx.push(`<text x="${x(t)}" y="${H-10}" text-anchor="middle" fill="var(--muted)" font-size="10.5">${yr}</text>`);
+  }
+
+  const mPath = monthly.map((p,i) => (i?"L":"M") + x(p.t).toFixed(1) + " " + y(p.v).toFixed(1)).join(" ");
+  const mLine = monthly.length ? `<path d="${mPath}" fill="none" stroke="var(--official)" stroke-width="1.8" opacity=".9"/>` : "";
+  const dDots = daily.map(p => `<circle cx="${x(p.t).toFixed(1)}" cy="${y(p.v).toFixed(1)}" r="4.5" fill="var(--accent)" stroke="var(--bg)" stroke-width="1.5"><title>${p.date}: ${fmt(p.v,3)} &deg;C (${p.status||""})</title></circle>`).join("");
+
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+    ${bands}${gx.join("")}${gy.join("")}${mLine}${dDots}</svg>`;
+
+  legend.innerHTML = `
+    <span><span class="dot-key" style="background:var(--accent)"></span><b>Our daily</b> (computed from OISST)</span>
+    <span><span class="dot-key" style="background:var(--official);border-radius:2px"></span><b>Official monthly Nino 3.4</b> (CPC)</span>
+    <span style="opacity:.7">shaded = El Nino (above +0.5) / La Nina (below &minus;0.5)</span>`;
+  note.textContent = `official basis: ${d.official?.basis || "?"} · baseline 1991-2020 · both series are the same quantity, the Nino 3.4 anomaly`;
+}
+
+function renderExplain(d) {
+  const daily = (d.daily_series || [])[d.daily_series.length - 1];
+  const om = (d.official?.monthly_nino34?.series || []);
+  const lastOm = om[om.length - 1];
+  const ourV = daily ? fmt(daily.nino34_anomaly_c) : "our latest";
+  const offV = lastOm ? fmt(lastOm.anomaly_c) : "the official";
+  const offWhen = lastOm ? MONTHS[lastOm.month] + " " + lastOm.year : "the latest official month";
+  document.getElementById("explain-body").innerHTML = `
+    <p><b>The number.</b> We take NOAA's daily sea surface temperature (OISST), average it over the
+    Nino 3.4 box in the equatorial Pacific (5&deg;N to 5&deg;S, 170&deg;W to 120&deg;W), and subtract the average
+    temperature for that same day of the year over 1991 to 2020. What is left, in &deg;C, is the
+    anomaly: how much warmer or cooler the ocean is than normal. Above +0.5&deg;C for long enough is
+    El Nino, below &minus;0.5&deg;C is La Nina.</p>
+    <p><b>Why our number sits higher than the official one.</b> They measure the same thing but over
+    different spans of time. Ours (<b>${ourV}&deg;C</b>) is a <b>single day</b>, which swings well above or
+    below the average. The official monthly Nino 3.4 (<b>${offV}&deg;C</b>, ${offWhen}) is a <b>whole month</b>
+    averaged, which smooths the daily swings. The official ONI is smoother still, a <b>3 month running
+    mean</b>. So on a warming month a single warm day reads higher than the month, and the month reads
+    higher than the 3 month mean. None of the three is wrong: they are the same signal at three
+    zoom levels.</p>
+    <p><b>The check.</b> We never take the official number as our source, we compute our own and record
+    the gap. It is the honest way to catch a broken pipeline: if our daily value drifted far from the
+    official trend, the gap would show it.</p>`;
+}
+
+function provTable(p) {
+  if (!p) return "";
+  const rows = Object.entries(p).map(([k,v]) => `<tr><td>${k}</td><td>${k==="retrieval_url"?`<code>${v}</code>`:v}</td></tr>`).join("");
+  return `<table>${rows}</table>`;
+}
+function renderProv(d) {
+  const daily = (d.daily_series || [])[d.daily_series.length - 1];
+  const parts = [];
+  if (daily?.provenance) parts.push(`<div style="margin-bottom:14px"><span class="badge">${daily.provenance.status||"?"}</span> our latest daily record (${daily.date})${provTable(daily.provenance)}</div>`);
+  if (d.status?.provenance) parts.push(`<div style="margin-bottom:14px"><span class="badge">${d.status.provenance.status||"?"}</span> official ONI status${provTable(d.status.provenance)}</div>`);
+  const op = d.official?.monthly_nino34?.provenance;
+  if (op) parts.push(`<div><span class="badge">${op.status||op.note||"?"}</span> official monthly Nino 3.4 (the control)${provTable(op)}</div>`);
+  document.getElementById("prov-body").innerHTML = parts.join("") || "No provenance yet.";
+}
+
+document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+  t.classList.add("active");
+  ["obs","fc","im"].forEach(id => document.getElementById(id).classList.toggle("hide", id !== t.dataset.tab));
+}));
+
+fetch("series.json?" + Date.now())
+  .then(r => r.json())
+  .then(d => {
+    renderStatus(d);
+    renderChart(d);
+    renderExplain(d);
+    renderProv(d);
+    const n = d.record_count, f = (d.source_files||[]).length;
+    document.getElementById("subtitle").textContent =
+      `${n} day${n===1?"":"s"} of our own data over the official record, provenance on every number`;
+  })
+  .catch(() => {
+    document.getElementById("status-body").innerHTML =
+      "<div class='prov'>Could not load series.json. Run <code>./run.sh serve</code> to build it.</div>";
+  });
+</script>
+</body>
+</html>

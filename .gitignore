@@ -16,3 +16,6 @@ data/_incoming/
 
 # Local agent worktrees
 .claude/worktrees/
+
+# Dashboard derived series (rebuilt on every ./run.sh serve, never a source of truth)
+ui/series.json

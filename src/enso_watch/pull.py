@@ -11,6 +11,7 @@ import json
 import os
 
 from enso_watch import sources
+from enso_watch.official import build_official
 from enso_watch.output import build_output
 from enso_watch.provenance import provenance_block
 
@@ -45,14 +46,28 @@ def pull(start_date=None):
     )
     os.makedirs(OUT_DIR, exist_ok=True)
     dest = os.path.join(OUT_DIR, f"enso-watch-{day.isoformat()}.json")
-    # Atomic write: a killed process must never leave a truncated product that a
-    # scheduled workflow would then commit.
+    _atomic_write_json(dest, out)
+
+    # The official reference series (the control we compare ourselves against),
+    # refreshed from the same pull. A slow moving product: it only changes when a
+    # new official month or season publishes, so its daily diff is usually empty.
+    control_provenance = provenance_block(
+        "NOAA CPC Nino3.4 monthly", "ersst5 91-20", sources.CONTROL_URL, pulled_at, "published"
+    )
+    official = build_official(control_path, oni_path, control_provenance, oni_provenance)
+    _atomic_write_json(os.path.join(OUT_DIR, "official.json"), official)
+
+    return dest, out
+
+
+def _atomic_write_json(dest, payload):
+    """Write JSON atomically: a killed process must never leave a truncated product
+    that a scheduled workflow would then commit."""
     tmp = dest + ".tmp"
     with open(tmp, "w") as handle:
-        json.dump(out, handle, indent=2)
+        json.dump(payload, handle, indent=2)
         handle.write("\n")
     os.replace(tmp, dest)
-    return dest, out
 
 
 def main():
