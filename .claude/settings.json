@@ -1,7 +1,6 @@
 {
   "enabledPlugins": {
     "engine@halovera-core": true,
-    "design@halovera-core": true,
     "memory@halovera-core": true
   }
 }
