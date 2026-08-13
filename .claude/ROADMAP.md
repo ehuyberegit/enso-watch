@@ -65,7 +65,7 @@ Two products in V0, each record carrying its provenance block.
 
 ## 🔥 In progress
 
-_(V0. Build sequence steps 1 to 5 done. Next action: step 6, the GitHub Actions daily workflow that pulls, recomputes, and commits the dated JSON.)_
+_(Nothing. V0 is shipped and its automation is live and proven. Next frontier under design: a private read only UI over the JSON, tabbed for observation, forecast, and impact. See "Later".)_
 
 ## ✅ Done
 
@@ -77,11 +77,15 @@ _(V0. Build sequence steps 1 to 5 done. Next action: step 6, the GitHub Actions 
 - Nino 3.4 computation built and gated (build step 3): area averaged box anomaly from OISST against the 1991 to 2020 box climatology, tested to the exact golden value at 3 decimals, offline, with a proven offline guard. Our raw region SST (29.215 C) matches the CPC control within 0.05 C. First hard gate green (./run.sh test, 9 tests). Passed adversarial review after fixing three robustness gaps (leap day policy, masked cell coverage, honest offline guard).
 - JSON output contract built and gated (build step 4): the daily series and the status record, each carrying a complete provenance block, plus the ENSO phase and strength derived from the ONI thresholds and the gap to the CPC control (with its period). Structural gate (criterion 4) refuses any provenance hole, including a null field. `./run.sh emit` prints the product. 15 tests green. Passed adversarial review after fixing the null provenance hole and adding threshold and lag coverage.
 - Live pull and smoke check built (build step 5): `./run.sh pull` downloads the real sources (via curl) and runs the same transform to write a dated JSON with honest live provenance; `./run.sh smoke` (criterion 2) reaches the real sources and confirms their shape, reporting without ever gating. Proven live against NOAA (resolved 2026-08-10 preliminary, all sources reachable and shape unchanged). The offline gate stays offline (network never a test dependency). 29 tests green. Passed adversarial review after switching network I/O from stdlib urllib to curl and fixing an HTTP status classification bug (a transient block must raise, only a real 404 means absent).
+- Daily automation built, then repaired and proven (build step 6): the GitHub Actions scheduled workflow pulls, recomputes, and commits the dated JSON. It was born broken (a multi line commit message dedented to column 0 inside the run block, closing the YAML scalar, so GitHub rejected the whole file at startup: every run failed in 0s and no scheduled pull ever fired, from 2026-08-11 to 2026-08-13). Fixed 2026-08-13 (commit message onto two `-m` flags, plus `permissions: contents: write` for the auto push). Proven green end to end by a manual dispatch: the runner fetched real NOAA data and auto committed `data/enso-watch-2026-08-11.json` (anomaly +2.682 C, full provenance). Criterion 3 (workflow end to end, hard gate) now genuinely met. Recorded as signature S2.
+- V0 shipped (build step 7): README written in the Astrolab spirit (what it does, what it costs, honest limits), decisions logged in this contract. V0, the observation oracle, is complete: a live daily JSON feed of the Nino 3.4 anomaly plus official ONI status, provenance on every number, refreshed and committed by the workflow with no hand on it.
 
 ## 🧊 Later
 
 **V1, the forecast oracle.** Ingest the IRI/CPC ENSO plume (probabilistic Nino 3.4, 26 models, 9 months ahead). Uncertainty is first class: the output carries the full spread (min, median, max) and the per phase probabilities, never a single naked number. Known blocker to solve first: the IRI plume has no clean downloadable file (visualization only), so V1 must find the machine readable door (for example the CPC probability table) before building.
 
 **Impact, a separate track.** Deferred by decision. "Impact" is scoped on its own, after observation and forecast are alive, never bolted onto V0 or V1.
+
+**A private read only UI (under design).** A very basic, private URL where the operator sees the important numbers interactively, not raw JSON. Tabbed to mirror the three oracles: tab 1 observation (V0, live now), tab 2 forecast (V1), tab 3 impact (later track). Only tab 1 has data today, so the UI ships incrementally alongside the oracles. It must stay honest: it renders the committed JSON and its provenance, it invents nothing, and it never becomes a second source of truth (the JSON in git stays the truth). Shape and hosting to be scoped before building.
 
 **Harness feedback.** Once the ingestion and provenance shapes prove out here, extract a reusable data crew into the-workspace (single sourced tooling, add on proof, not before).
