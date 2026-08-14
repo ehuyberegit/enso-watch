@@ -10,7 +10,7 @@
         "source": "NOAA OISST",
         "dataset_version": "v2.1",
         "retrieval_url": "https://www.ncei.noaa.gov/data/sea-surface-temperature-optimum-interpolation/v2.1/access/avhrr/202608/oisst-avhrr-v02r01.20260812_preliminary.nc",
-        "pull_timestamp": "2026-08-13T16:11:07Z",
+        "pull_timestamp": "2026-08-14T13:15:07Z",
         "status": "preliminary"
       }
     }
@@ -26,7 +26,7 @@
       "source": "NOAA CPC ONI",
       "dataset_version": "ascii v6",
       "retrieval_url": "https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt",
-      "pull_timestamp": "2026-08-13T16:11:07Z",
+      "pull_timestamp": "2026-08-14T13:15:07Z",
       "status": "published"
     }
   }
