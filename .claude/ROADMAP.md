@@ -3,7 +3,150 @@
 > Operational source of truth. At the top: the current work's run contract.
 > Rule: "Done" = integrated, green (machine gate), reviewed.
 
-## 🚦 Run contract, current work (V1, the forecast oracle, Projet A)
+## >> DIRECTION UNDER RE-SCOPING (discovery reopened 2026-08-21). READ FIRST.
+
+> Do not execute the contracts below yet. This session went back to method stage 1 (discovery)
+> and the north star moved. Two objectives now stand above every technical contract here:
+>
+> 1. **Product north star: impact.** The real goal is to predict, in time, the SOCIAL and
+>    ENVIRONMENTAL consequences of the ENSO signal (the "impact" oracle). Observation (V0) and
+>    forecast (V1) are the FOUNDATION for this, not the goal. Honest hard part: ENSO shifts
+>    regional probabilities, it does not decide local weather, so impact must link our signal to
+>    impact data (yields, floods, prices, displacement) without claiming causality we lack. Two
+>    scoping questions still open: which consequence first (agriculture / floods-droughts / food
+>    prices) and which region first (Peru, Horn of Africa, Indonesia, Australia).
+> 2. **Personal objective: learn data science.** Use this project to learn the craft and play with
+>    linear regressions Jupyter-notebook style (turn the lambda knob, add/drop predictors, watch
+>    RMSE and ACC move). Proposed resolution, pending CEO validation: a free `notebooks/` lab vs
+>    the gated `src/` that ships; isolated lab deps in a `requirements-lab.txt` (jupyter, pandas,
+>    scikit-learn) so the product stays light (numpy + netCDF4). "Play in the notebook, promote to
+>    the module."
+>
+> The technical path already drafted this session stays valid but PARKED under these two:
+> - `docs/SOLUTION-DESIGN.md`: the full rebuild (RONI dual index, probabilistic + calibrated
+>   forecast, verification suite with CRPS/RPSS/reliability, four-screen UI). Companion PDF scoping
+>   on the Desktop (`enso-watch-scoping-2026-08-19.pdf`).
+> - The "data hardening" contract just below was written this session, then itself superseded by the
+>   re-scoping. Treat it as the technical backlog, not the current work.
+> - One decision open for the CEO: D1, the headline index (RONI vs the raw fixed-baseline anomaly).
+>
+> Next when work resumes: finish discovery (impact opportunity map on evidence, the two scoping
+> questions), then requirements (stage 2), then LLD (stage 4), THEN a run contract. We skipped
+> 1, 2, 4 this session and jumped to design; the re-scoping corrects that.
+
+---
+
+## 🚦 RUN CONTRACT, current work. Data hardening: close the two real holes in the truth store
+
+> Decision 2026-08-17, frozen, and it REPLACES the "data reboot" contract written on 2026-08-13
+> and never executed. That contract asked for a from-scratch rebuild of the data layer. The audit
+> below checks its eight criteria one by one against the code as it actually stands, and six of
+> them are already met by the layer built for V0 and V1, which has been feeding a green daily
+> automation since 2026-08-13. A rebuild would re-earn what is already green. So the reboot is
+> retired and only its unmet criteria survive, as a hardening pass. Erwan arbitrated option 2
+> (extract the unmet criteria) over executing or dropping the reboot whole.
+>
+> What the reboot got right and stays true, as standing law rather than work to do: the MONTHLY
+> whole-record pull is the spine and the daily transform is the edge; the clean machine-readable
+> door (netCDF or ascii) is captured and frozen BEFORE any parser is written; an automation is
+> not "done" until one real dispatch has committed a JSON visible in the Actions tab (S2).
+
+### Audit of the reboot's eight criteria, 2026-08-17 (evidence, not opinion)
+
+| # | Criterion | Verdict | Evidence |
+| --- | --- | --- | --- |
+| 1 | Offline deterministic gate | **MET** | `./run.sh test`: 94 tests, 0.34 s, exit 0, behind the socket guard (`tests/test_offline_guard.py`). |
+| 2 | Monthly history committed | **MET** | `data/history/nino34_monthly.csv` (539 months, 1981-09 to 2026-07) with its provenance sidecar; `tests/test_history.py` pins the golden endpoints and finds the real Dec 2023 peak on a frozen monthly fixture slice. |
+| 3 | Daily edge committed | **MET** | `tests/test_nino34.py::test_golden_transform` and the daily golden in `tests/test_history.py`, both on frozen fixtures; prelim/final flag carried (see the committed dated JSONs). |
+| 4 | Provenance complete on EVERY record | **NOT MET** | The structural gate (`tests/test_output.py::test_every_record_has_complete_provenance`, `provenance.is_complete`) covers ONLY the V0 output (daily series and status). The three V1 artifacts each carry a hand-rolled block of a different shape, with no preliminary/final status, enforced by nothing: the two `data/history/*.provenance.json` sidecars (`source_name` / `dataset` / `pulled_at_utc`) and the block inside `data/forecast/cpc_official.json` (`source_url` / `phase_definition`). Neither `history.py`, `wwv.py`, `official_forecast.py` nor `peak.py` references the provenance module at all. Against the chef's own rule ("no number ships without a complete provenance block"), one hole is red. |
+| 5 | CPC control gap recorded | **MET** | `our_nino34_vs_official` plus `control_period` are in the status record and golden-tested (`test_status_golden`); visible live in the committed JSON (gap 1.245, control 2026-06). |
+| 6 | Leap-day rule tested | **MET** | `tests/test_units.py::ClimatologyIndexTest::test_feb29_falls_back_to_feb28`. |
+| 7 | Live smoke covers the live doors | **PARTLY MET** | `./run.sh smoke` watches 3 doors (OISST daily, CPC ONI, CPC control). Three doors that feed shipped numbers are unwatched: the PSL OISST monthly mean (the spine), the PMEL warm water volume (the model's precursor), and the CPC probability table, which is the only HTML door and therefore the likeliest to drift in silence. |
+| 8 | Automation proven green end to end | **MET** | One manual dispatch green 2026-08-13, then four scheduled runs green (13, 14, 15, 16 August), each committing its dated JSON with `permissions: contents: write`. |
+
+Two findings surfaced by the audit itself, outside the reboot's original eight, folded into this contract:
+
+- **The daily pull lags two days, and nowhere says so.** The 2026-08-16 run committed `data/enso-watch-2026-08-14.json`: OISST preliminary latency, not a bug, but the freshest number the product shows is always about two days old and that must be stated, not inferred.
+- **Signature S2 is still marked open** in `.claude/signatures.md` although it is now proven closed by five green runs.
+
+### 1. Measurable objective (the observable result)
+
+The truth store keeps every guarantee it already has, and gains the two it only pretended to
+have: provenance enforced by the machine on EVERY shipped number (not just the V0 output), and
+a live smoke that watches EVERY door we actually read. What we show when done: a green offline
+gate that goes red if any artifact anywhere has a provenance hole, and a smoke run reporting on
+six doors.
+
+### 2. Machine-verifiable finish criteria (the GO threshold)
+
+| # | Criterion | What the machine checks | Verdict |
+| --- | --- | --- | --- |
+| A | One provenance shape, everywhere | Every shipped artifact (the dated daily JSON, the two monthly history sidecars, the official forecast snapshot) carries the SAME block: source name, dataset version, retrieval URL, pull timestamp, preliminary/final status. | Hard gate (structural). |
+| B | The gate refuses a hole anywhere | One test walks every committed artifact family and fails if a single required field is missing, empty, or null. Proven by an injected hole (a deliberately incomplete block must turn it red). | Hard gate: one hole = red. |
+| C | The smoke watches all six doors | `./run.sh smoke` reaches and shape-checks OISST daily, CPC ONI, CPC control, PSL OISST monthly, PMEL warm water volume, and the CPC probability table, and reports each one. | Reports only, never blocks. |
+| D | The lag is stated where the number is read | The daily record's latency (data date versus pull date) is explicit in the product and in the README, not left to be inferred. | Structural: the field/line exists. |
+| E | The gate stays green | `./run.sh test` still exits 0 offline behind the socket guard, with the new tests included. | Hard gate. |
+
+**GO threshold**: A, B, D and E green, and the smoke (C) reports on six doors without a blocking error.
+
+### 3. Non-goals (the scope-creep guardrail)
+
+- No rebuild of what the audit found green. Criteria 1, 2, 3, 5, 6 and 8 are settled; touching them is out of scope.
+- No forecast or model work. The V1 track sits on this data and has its own contract below, including the issue-month decision still to freeze.
+- No impact track.
+- No new shipped UI surface. The private local dashboard stays a read-only lens.
+- No new dependency beyond the pinned set (numpy, netCDF4) unless declared as a decision.
+- No change to the fixed 1991-2020 baseline, ever, silently.
+- Network is never a test dependency: the gate stays offline on fixtures, the smoke stays outside it.
+
+### 4. Degrees of freedom (I decide alone)
+
+The exact provenance field names in the unified block (as long as one shape holds everywhere and
+covers the five required facts), how the artifact walk is implemented, file layout under `src/`,
+the fixture slices, whether to delegate mechanical bulk to the worker. Curl over stdlib urllib
+for live network I/O stays decided.
+
+### 5. Escalation rules (the only list allowed to wake the CEO)
+
+Destructive or irreversible operation beyond a git-recoverable edit · any spend (e.g. a paid data
+key) · a contradiction inside this contract · a security decision · discovering that unifying the
+provenance shape would force a change to a published number.
+
+### 6. Parking protocol
+
+Any taste decision or form ambiguity met along the way (dashboard look, naming aesthetics) goes
+to the parking lot and the run continues on another front. The run never blocks on a taste call.
+
+### Autonomous-run clauses
+
+- **① Stop bound** (stop clean at the first reached): objective met · OR first taste blocker · OR the budget/time set at launch.
+- **② Decision rule**: objective AND reversible (bug, robustness, local refactor) decided alone behind the reviewer gate before "Done"; sensitive AND ambiguous (taste, irreversible, security) parked.
+- **③ Required end state**: nothing unfinished dangling without a flagged reason · the machine gate green · this roadmap updated in the same commit · the self-review written.
+
+### Build sequence (data hardening)
+
+1. **Unify the provenance shape**: one block definition, already in `provenance.py`, extended to serve the monthly history sidecars and the forecast snapshot (adding the missing dataset version and preliminary/final status). Rewrite the three artifacts to it, without changing a single number.
+2. **The universal structural gate**: one test that walks every artifact family and refuses any hole, proven red on an injected incomplete block.
+3. **The smoke, widened to six doors**: add the PSL monthly, the PMEL warm water volume, and the CPC probability table, each with its own shape check. Still reporting, never gating.
+4. **State the lag**: the daily latency written into the product and the README.
+5. **Close S2** in `.claude/signatures.md` with the five green runs as evidence.
+
+---
+
+## Run contract, V1 the forecast oracle (Projet A, sits ON the data socle)
+
+> **Open, and to freeze before V1 is called done (flagged 2026-08-17).** The forecast's issue
+> month (which month the model predicts from, given that the daily edge runs ahead of the last
+> complete monthly value) was re-tuned reactively during the 2026-08-13 session, and that swung
+> the peak figure from about +2.72 C to +3.19 C. The commit says so itself. This must become one
+> explicit, written decision with its reason, not a value adjusted per reaction. Until it is
+> frozen, the peak number is provisional.
+>
+> Evidence that this is not cosmetic, read off the dashboard on 2026-08-17: the peak now issues
+> from 2026-08, a PROVISIONAL month averaging only 5 days, and reads +3.67 C (band 3.32 to 4.02).
+> It has drifted from the +3.19 C recorded on 2026-08-13 with no decision taken in between: the
+> figure simply follows whichever month is freshest, however thin. The frozen decision must say
+> how many days a provisional month needs before the peak is allowed to issue from it.
 
 > Decision 2026-08-13, frozen: V1 builds OUR OWN simple statistical forecast of the
 > Nino 3.4 ocean signal at a 1 to 3 month lead, whose target is to resemble the official
@@ -167,7 +310,7 @@ Operator reframe: a fixed lead forecast is academic; what matters for impact is 
 - Hover tooltips on every chart (Observation, both Ingredients charts, the hindcast, the forecast plume) show the exact date and value under the cursor, with a vertical guide.
 - `./run.sh test` green (94 tests), no console errors, Trinity clean.
 
-The forecast oracle (V1) stands end to end: observation, ingredients, an honest judge, a model that beats the baselines, a forward forecast that agrees with NOAA at 99%, and a peak forecast (timing and magnitude with uncertainty). Parked for next time: a daily view of the current state, the historical skill comparison, and the impact track (the peak now feeds it). Nothing is committed yet.
+The forecast oracle (V1) stands end to end: observation, ingredients, an honest judge, a model that beats the baselines, a forward forecast that agrees with NOAA at 99%, and a peak forecast (timing and magnitude with uncertainty). Parked for next time: a daily view of the current state, the historical skill comparison, and the impact track (the peak now feeds it). Committed 2026-08-13 (`0f5a9c5`), with one honest caveat carried into the V1 contract above: the forecast's issue month was tuned reactively and is not yet a frozen decision.
 
 ## ✅ Done
 
