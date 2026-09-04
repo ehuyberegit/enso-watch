@@ -4596,7 +4596,7 @@
       "source": "NOAA CPC Nino3.4 monthly",
       "dataset_version": "ersst5 91-20",
       "retrieval_url": "https://www.cpc.ncep.noaa.gov/data/indices/ersst5.nino.mth.91-20.ascii",
-      "pull_timestamp": "2026-09-03T16:06:40Z",
+      "pull_timestamp": "2026-09-04T16:01:39Z",
       "status": "published"
     }
   },
@@ -9191,13 +9191,18 @@
         "season": "MJJ",
         "year": 2026,
         "oni": 1.39
+      },
+      {
+        "season": "JJA",
+        "year": 2026,
+        "oni": 1.8
       }
     ],
     "provenance": {
       "source": "NOAA CPC ONI",
       "dataset_version": "ascii v6",
       "retrieval_url": "https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt",
-      "pull_timestamp": "2026-09-03T16:06:40Z",
+      "pull_timestamp": "2026-09-04T16:01:39Z",
       "status": "published"
     }
   }
