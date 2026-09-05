@@ -4596,7 +4596,7 @@
       "source": "NOAA CPC Nino3.4 monthly",
       "dataset_version": "ersst5 91-20",
       "retrieval_url": "https://www.cpc.ncep.noaa.gov/data/indices/ersst5.nino.mth.91-20.ascii",
-      "pull_timestamp": "2026-09-04T16:01:39Z",
+      "pull_timestamp": "2026-09-05T14:52:12Z",
       "status": "published"
     }
   },
@@ -9202,7 +9202,7 @@
       "source": "NOAA CPC ONI",
       "dataset_version": "ascii v6",
       "retrieval_url": "https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt",
-      "pull_timestamp": "2026-09-04T16:01:39Z",
+      "pull_timestamp": "2026-09-05T14:52:12Z",
       "status": "published"
     }
   }
