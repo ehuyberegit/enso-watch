@@ -1,0 +1,33 @@
+{
+  "daily_series": [
+    {
+      "date": "2026-10-08",
+      "nino34_anomaly_c": 3.28,
+      "region_mean_sst_c": 29.956,
+      "climatology_mean_c": 26.676,
+      "baseline": "1991-2020",
+      "provenance": {
+        "source": "NOAA OISST",
+        "dataset_version": "v2.1",
+        "retrieval_url": "https://www.ncei.noaa.gov/data/sea-surface-temperature-optimum-interpolation/v2.1/access/avhrr/202610/oisst-avhrr-v02r01.20261008_preliminary.nc",
+        "pull_timestamp": "2026-10-09T18:10:07Z",
+        "status": "preliminary"
+      }
+    }
+  ],
+  "status": {
+    "oni_latest": 2.16,
+    "oni_season": "JAS 2026",
+    "phase": "el_nino",
+    "strength": "very_strong",
+    "our_nino34_vs_official": 1.84,
+    "control_period": "2026-06",
+    "provenance": {
+      "source": "NOAA CPC ONI",
+      "dataset_version": "ascii v6",
+      "retrieval_url": "https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt",
+      "pull_timestamp": "2026-10-09T18:10:07Z",
+      "status": "published"
+    }
+  }
+}
